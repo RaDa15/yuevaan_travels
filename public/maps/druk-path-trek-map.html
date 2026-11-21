@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Druk Path Trek, Paro to Thimphu — Interactive 3D Trek Map</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Palette: forest green base, off-white neutral, one orange accent (route, play button, key stat). */
+:root{
+  --base:#0e1d15; --base-2:#16291f; --line:rgba(238,242,234,.14);
+  --text:#eef2ea; --muted:#a3b3a7; --accent:#ff7a1a; --accent-ink:#1a0d02;
+  --panel:rgba(14,29,21,.88); --r:14px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Barlow,system-ui,sans-serif;color:var(--text);background:var(--base);overflow:hidden}
+#map{position:absolute;inset:0}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.panel{background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--r)}
+.cond{font-family:"Barlow Condensed",Barlow,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+
+/* Left info panel */
+#info{position:absolute;z-index:3;top:14px;left:14px;width:330px;max-height:calc(100% - 222px);overflow:auto;padding:18px 18px 14px}
+.eyebrow{font-size:14px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:18px;height:2px;background:var(--accent)}
+h1{margin:6px 0 2px;font-size:31px;line-height:1.02;font-weight:700}
+h1 em{font-style:normal;color:var(--accent)}
+.region{font-size:14px;color:var(--muted);margin:0 0 12px}
+#trekPick{width:100%;margin:0 0 12px;background:var(--base-2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:0}
+.stats div{background:var(--base-2);padding:9px 11px}
+.stats dt{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stats dd{margin:2px 0 0;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.stats .key dd{color:var(--accent)}
+.stats small{font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+h2{font-size:15px;margin:16px 0 6px;color:var(--muted);font-weight:600}
+#segs{list-style:none;margin:0;padding:0}
+#segs button{display:grid;grid-template-columns:22px 1fr;gap:2px 8px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:7px 8px}
+#segs button:hover{background:rgba(238,242,234,.06)}
+#segs .n{grid-row:span 2;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--muted);font-size:11px;display:grid;place-items:center;margin-top:1px;color:var(--muted)}
+#segs .t{font-weight:600;font-size:14.5px}
+#segs .m{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+#segs li.on button{background:rgba(238,242,234,.08)}
+#segs li.on .n{border-color:var(--accent);color:var(--text);background:rgba(255,122,26,.18)}
+#notes{margin:0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.45}
+#notes li{margin:3px 0}
+.badge{display:inline-block;font-size:11.5px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:3px 7px;margin-top:10px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{background:var(--base-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px}
+.chip[aria-pressed="true"]{border-color:var(--text)}
+.chip:hover{background:#1d3628}
+
+/* Bottom dock: playback + elevation profile */
+#dock{position:absolute;z-index:3;left:14px;right:14px;bottom:14px;padding:12px 14px 10px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center}
+#play{width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+#play svg{width:20px;height:20px;fill:currentColor}
+#play:hover{filter:brightness(1.08)}
+#readout{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;font-variant-numeric:tabular-nums}
+#readout b{font-size:19px;font-weight:600}
+#readout span{font-size:13px;color:var(--muted)}
+#readout .seg{margin-left:auto;font-size:13.5px;color:var(--text)}
+#profWrap{grid-column:1/-1;position:relative;height:104px;touch-action:none;cursor:ew-resize}
+#prof{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ax{position:absolute;left:0;font-size:10.5px;color:var(--muted);transform:translateY(-50%);pointer-events:none;background:rgba(14,29,21,.6);padding:0 3px;border-radius:3px}
+.wpt{position:absolute;bottom:2px;font-size:10.5px;color:var(--muted);transform:translateX(-50%);white-space:nowrap;pointer-events:none}
+.wpt.first{transform:none;left:14px!important}.wpt.last{transform:translateX(-100%)}
+#cursor{position:absolute;top:0;bottom:0;width:2px;background:var(--text);pointer-events:none;left:0}
+#cursor::after{content:"";position:absolute;left:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--text);top:var(--y,50%);transform:translateY(-50%)}
+#scrub{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:0;height:14px}
+
+/* Map markers */
+.wp{display:flex;align-items:center;gap:6px;pointer-events:none;transform:translateY(-2px)}
+.wp i{width:12px;height:12px;border-radius:50%;background:var(--text);border:3px solid var(--base);box-shadow:0 0 0 1.5px var(--text)}
+.wp.end i{background:var(--accent)}
+.wp span{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.wp small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.hiker{width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 6px rgba(255,122,26,.3),0 2px 6px rgba(0,0,0,.5)}
+
+#msg{position:absolute;z-index:5;top:14px;left:50%;transform:translateX(-50%);padding:10px 14px;font-size:13.5px;max-width:min(520px,90vw);display:none}
+#infoToggle{display:none}
+.maplibregl-ctrl-attrib{font-size:10.5px}
+.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left{bottom:196px}
+
+@media (max-width:820px){
+  #info{left:8px;right:8px;top:8px;width:auto;max-height:55%;padding:14px;display:none}
+  #info.open{display:block}
+  #infoToggle{display:block;position:absolute;z-index:4;top:10px;left:10px}
+  #info.open ~ #infoToggle{top:auto;bottom:206px}
+  #dock{left:8px;right:8px;bottom:8px}
+  h1{font-size:26px}
+  #readout .seg{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="3D map of the trekking route"></div>
+
+<aside id="info" class="panel" aria-label="Trek details">
+  <div class="eyebrow cond">Trekking route</div>
+  <h1 class="cond" id="title"></h1>
+  <p class="region" id="region"></p>
+  <select id="trekPick" aria-label="Choose a trek" hidden></select>
+  <dl class="stats" id="stats"></dl>
+  <h2 class="cond">Route segments</h2>
+  <ol id="segs"></ol>
+  <h2 class="cond">Before you go</h2>
+  <ul id="notes"></ul>
+  <div class="badge" id="badge"></div>
+  <div class="tools">
+    <button class="chip" id="b3d" aria-pressed="true">3D terrain</button>
+    <button class="chip" id="bFollow" aria-pressed="true">Follow camera</button>
+    <button class="chip" id="bWhere">Where in Bhutan?</button>
+    <button class="chip" id="bReset">Reset view</button>
+    <button class="chip" id="bGpx">Load a GPX track</button>
+    <input type="file" id="gpxFile" accept=".gpx,application/gpx+xml" hidden>
+  </div>
+</aside>
+<button class="chip" id="infoToggle" aria-expanded="false">Trek info</button>
+
+<section id="dock" class="panel" aria-label="Route playback and elevation profile">
+  <button id="play" aria-label="Play the trek"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4v16l13-8z"/></svg></button>
+  <div id="readout">
+    <div><b id="rDist">0.0 km</b> <span>from start</span></div>
+    <div><b id="rEle">–</b> <span>elevation</span></div>
+    <div><b id="rUp">–</b> <span>climbed</span></div>
+    <div class="seg" id="rSeg"></div>
+  </div>
+  <div id="profWrap" aria-hidden="true"><svg id="prof" viewBox="0 0 1000 100" preserveAspectRatio="none"></svg><div id="cursor"></div></div>
+  <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Position along the route">
+</section>
+<div id="msg" class="panel" role="status"></div>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script>
+/* ================= CONFIG =================
+   Tile sources. Both work without a key for development.
+   For the live commercial site, swap in a keyed provider (see notes in the hand-over). */
+var CONFIG = {
+  imagery: {
+    tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    maxzoom: 17,
+    attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'
+  },
+  terrain: {
+    tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+    encoding: 'terrarium', maxzoom: 14,
+    attribution: 'Terrain: Mapzen / AWS Terrain Tiles'
+  },
+  exaggeration: 1,      // keep at 1 (true scale): MapLibre 5.x misplaces HTML markers on exaggerated terrain
+  playSeconds: 45       // length of the fly-through
+};
+
+/* ================= TREKS =================
+   One object per trek. route = "lon,lat,ele;lon,lat,ele;..." (ele in metres).
+   waypoints sit at a distance (km) along the route; consecutive waypoints define the segments. */
+var TREKS = [{"id": "druk", "title": "Druk Path: Paro to <em>Thimphu</em>", "region": "Paro to Thimphu · camping trek", "difficulty": "Moderate (high altitude)", "season": "Mar – May · Sep – Nov", "notes": ["Camps on the usual itinerary: Jele Dzong, Jangchulakha, Jimilang Tsho, Simkotra Tsho, Phajoding.", "Several nights are above 3,700 m. Build in acclimatisation days in Paro before starting.", "Jangchulakha and Jimilang Tsho are not named in OpenStreetMap, so they are not pinned on this map; add them from your guide's GPS.", "Nights are below freezing in spring and autumn. Snow can close the high section in winter."], "sourceNote": "Trail line from OpenStreetMap paths; elevations from the SRTM terrain model. Place and camp names follow OpenStreetMap. Walk it with your guide and check names against your own itinerary before publishing.", "attribution": "Trails &copy; OpenStreetMap contributors, routed with BRouter", "waypoints": [{"km": 0, "name": "Ta Dzong (National Museum)", "leg": ""}, {"km": 10.51, "name": "Jele Dzong", "leg": "Ta Dzong to Jele Dzong"}, {"km": 29.23, "name": "Janye Tsho (Janetsho)", "leg": "Jele Dzong to Janye Tsho"}, {"km": 31.4, "name": "Simkota Tsho (Simkotra)", "leg": "Janye Tsho to Simkota Tsho"}, {"km": 34.43, "name": "Labana La (highest point)", "leg": "Simkota Tsho to Labana La"}, {"km": 38.1, "name": "Phajoding Monastery", "leg": "Labana La to Phajoding"}, {"km": 999, "name": "Sangaygang, Thimphu", "leg": "Phajoding to Sangaygang"}], "route": "89.42591,27.42904,2427;89.42579,27.42924,2426;89.42625,27.42999,2425;89.42359,27.43073,2349;89.42354,27.4301,2347;89.4233,27.43063,2341;89.42387,27.43226,2340;89.42436,27.43249,2341;89.42405,27.43302,2335;89.4242,27.43363,2329;89.42323,27.43473,2308;89.42316,27.43518,2304;89.42375,27.43581,2305;89.42338,27.43608,2305;89.42343,27.43632,2304;89.42388,27.43674,2308;89.42455,27.4369,2315;89.42445,27.43737,2313;89.42416,27.4377,2309;89.42419,27.43834,2307;89.42392,27.43857,2303;89.42371,27.43922,2292;89.42516,27.44061,2296;89.42611,27.44191,2299;89.42597,27.44256,2302;89.42627,27.44317,2305;89.42695,27.44351,2311;89.42913,27.44383,2332;89.43285,27.44401,2363;89.43339,27.44419,2367;89.43481,27.4439,2382;89.43648,27.44384,2398;89.43985,27.44479,2442;89.44171,27.44481,2465;89.4429,27.44513,2476;89.44317,27.44485,2481;89.44399,27.44512,2492;89.44543,27.4449,2513;89.44614,27.44503,2523;89.44717,27.4456,2533;89.44777,27.44565,2541;89.44833,27.44527,2546;89.44859,27.44589,2555;89.44899,27.44603,2560;89.44891,27.44633,2564;89.44948,27.44656,2577;89.45096,27.44646,2610;89.45246,27.44607,2630;89.45152,27.44675,2644;89.45131,27.4472,2660;89.4526,27.44745,2684;89.45412,27.44701,2717;89.45573,27.44693,2757;89.45709,27.4472,2797;89.45788,27.44778,2832;89.45831,27.44861,2868;89.45867,27.44885,2900;89.46161,27.44839,2979;89.46244,27.44847,3001;89.46284,27.44883,3022;89.46368,27.44906,3044;89.4659,27.44913,3130;89.47124,27.45008,3239;89.47297,27.45009,3288;89.47322,27.45052,3326;89.47519,27.45016,3360;89.47687,27.44935,3399;89.4771,27.44986,3417;89.47737,27.45003,3425;89.47732,27.45052,3433;89.47769,27.45139,3441;89.47803,27.45164,3447;89.47814,27.45206,3452;89.47849,27.45225,3455;89.47901,27.45338,3457;89.4787,27.45404,3460;89.47885,27.45499,3473;89.47918,27.4557,3483;89.47935,27.45587,3491;89.47994,27.45576,3499;89.48141,27.45688,3532;89.48159,27.45664,3542;89.48177,27.45507,3561;89.48263,27.4542,3579;89.48246,27.45387,3595;89.48262,27.45355,3602;89.48219,27.45071,3612;89.48325,27.44985,3604;89.48358,27.44856,3595;89.48221,27.44651,3578;89.48264,27.44568,3572;89.48266,27.44434,3568;89.48264,27.44568,3572;89.48221,27.44651,3578;89.48358,27.44856,3595;89.48325,27.44985,3604;89.48219,27.45071,3612;89.48262,27.45355,3602;89.48246,27.45387,3595;89.48263,27.4542,3579;89.48177,27.45507,3561;89.48159,27.45664,3544;89.48141,27.45688,3539;89.48178,27.45753,3544;89.48172,27.45783,3554;89.48127,27.45799,3565;89.48095,27.45956,3594;89.48112,27.46007,3600;89.48075,27.46199,3626;89.48043,27.46249,3635;89.47951,27.46322,3660;89.47902,27.46431,3681;89.47902,27.46506,3688;89.47939,27.46596,3688;89.48057,27.46704,3675;89.48079,27.46753,3667;89.48168,27.46762,3660;89.48227,27.46792,3654;89.48256,27.46834,3649;89.4821,27.4695,3643;89.48313,27.47096,3631;89.48346,27.47284,3603;89.4848,27.47423,3588;89.48548,27.47467,3596;89.48551,27.47528,3602;89.48518,27.47629,3613;89.48437,27.47772,3617;89.48552,27.47931,3658;89.486,27.47956,3679;89.48669,27.4804,3704;89.48672,27.48147,3711;89.48609,27.48349,3720;89.4864,27.48529,3734;89.48635,27.48747,3741;89.48661,27.48827,3745;89.48626,27.48886,3748;89.48621,27.49095,3752;89.48676,27.49179,3757;89.48744,27.4937,3765;89.48803,27.49447,3771;89.48831,27.49533,3788;89.48933,27.49623,3800;89.48975,27.4963,3801;89.48999,27.49682,3806;89.49176,27.49749,3813;89.49243,27.4981,3821;89.493,27.49822,3828;89.49409,27.49919,3835;89.49484,27.50063,3849;89.49482,27.50123,3858;89.49406,27.5027,3906;89.49463,27.50337,3921;89.49468,27.50416,3952;89.49517,27.50458,3960;89.49572,27.50471,3965;89.49587,27.50558,3983;89.49651,27.50657,3991;89.4964,27.50827,3995;89.49654,27.50888,3987;89.49703,27.50929,3979;89.49695,27.51036,3982;89.49748,27.51096,3984;89.49756,27.51253,3996;89.49638,27.51498,4037;89.49703,27.5157,4005;89.49692,27.51587,4001;89.49732,27.51673,3984;89.49695,27.51725,3990;89.49766,27.51797,3989;89.49777,27.51872,3994;89.4981,27.51926,3996;89.49718,27.52017,4004;89.49727,27.52123,3988;89.49711,27.52187,3990;89.49676,27.52278,3991;89.49649,27.523,3991;89.49641,27.52369,3989;89.49574,27.52435,3989;89.49538,27.52512,3988;89.49518,27.52664,3996;89.49481,27.52732,4005;89.49413,27.52793,4006;89.49386,27.52844,4001;89.49227,27.52954,4004;89.49178,27.5305,4032;89.49185,27.53105,4047;89.49125,27.5309,4058;89.49092,27.53132,4067;89.49061,27.53275,4050;89.49074,27.5349,4015;89.48987,27.53689,4033;89.48882,27.53822,4063;89.48897,27.53981,4098;89.48877,27.5399,4101;89.48947,27.54057,4111;89.48988,27.542,4139;89.49027,27.54242,4145;89.49056,27.54402,4157;89.49137,27.54505,4169;89.49138,27.54671,4183;89.49162,27.54696,4181;89.49269,27.54734,4172;89.49335,27.5481,4161;89.49453,27.54878,4130;89.49462,27.5486,4116;89.49508,27.54896,4105;89.49529,27.54901,4095;89.49524,27.54868,4085;89.49585,27.54837,4052;89.49649,27.5484,4033;89.49679,27.54868,4027;89.49659,27.54959,4030;89.49672,27.54973,4024;89.49847,27.54891,3959;89.49891,27.5489,3948;89.49953,27.54828,3934;89.50134,27.54852,3934;89.50432,27.54785,3891;89.50513,27.54798,3878;89.50557,27.5483,3876;89.50461,27.54739,3870;89.50371,27.54691,3868;89.50353,27.54624,3863;89.50379,27.54533,3871;89.50202,27.54337,3928;89.50188,27.54302,3934;89.50204,27.54168,3985;89.50234,27.54112,3998;89.50214,27.54077,4002;89.50226,27.54025,4001;89.50185,27.53966,4000;89.50189,27.53892,3994;89.50167,27.53836,3993;89.50218,27.53819,3994;89.5022,27.53796,3999;89.50327,27.53737,4004;89.50489,27.53766,3995;89.50523,27.53749,3993;89.50591,27.53749,3991;89.50684,27.53676,4003;89.50796,27.53497,4014;89.50818,27.53487,4014;89.50852,27.53499,4015;89.51002,27.53383,4034;89.51064,27.53326,4040;89.51126,27.53226,4041;89.51177,27.53241,4038;89.51252,27.53228,4032;89.51291,27.53262,4029;89.51327,27.5326,4019;89.51431,27.53305,4009;89.51455,27.5335,4014;89.51506,27.53357,4018;89.51673,27.53278,3997;89.51807,27.53269,3978;89.51813,27.53237,3968;89.5195,27.53156,3955;89.51992,27.53156,3956;89.52065,27.53105,3959;89.52173,27.53062,3963;89.5231,27.52964,3976;89.52335,27.5291,3986;89.52486,27.52782,4016;89.52508,27.52738,4023;89.52461,27.5267,4043;89.52506,27.52548,4069;89.52502,27.52519,4076;89.5245,27.52456,4097;89.52329,27.52417,4116;89.52425,27.52211,4137;89.52577,27.52114,4143;89.52597,27.52063,4143;89.52693,27.52053,4136;89.52832,27.51944,4122;89.5304,27.51889,4125;89.53139,27.51819,4112;89.53188,27.51761,4108;89.53273,27.51717,4110;89.53331,27.51633,4131;89.5335,27.51527,4145;89.53379,27.51494,4153;89.53363,27.51483,4159;89.53367,27.51393,4173;89.53339,27.51359,4180;89.53398,27.513,4180;89.53542,27.5132,4181;89.5365,27.51301,4183;89.53741,27.51181,4189;89.5375,27.51123,4191;89.53815,27.51089,4193;89.53895,27.5109,4183;89.54025,27.51044,4171;89.54046,27.51009,4170;89.54108,27.50973,4175;89.54165,27.50864,4175;89.54259,27.50779,4176;89.54277,27.5079,4182;89.54313,27.50772,4184;89.54356,27.50781,4184;89.54396,27.50758,4172;89.54428,27.50767,4164;89.54453,27.50604,4137;89.54447,27.50442,4135;89.54431,27.5041,4136;89.54445,27.50376,4137;89.54419,27.50304,4143;89.54497,27.50137,4164;89.54482,27.49948,4194;89.54538,27.49847,4208;89.54587,27.49834,4202;89.54613,27.49798,4192;89.54624,27.49811,4189;89.54678,27.49792,4177;89.54752,27.4981,4173;89.54923,27.49796,4156;89.54948,27.4978,4156;89.55021,27.49808,4156;89.55093,27.49805,4152;89.55147,27.49793,4148;89.55196,27.49757,4139;89.55299,27.49742,4126;89.55461,27.49754,4112;89.55458,27.49784,4118;89.55488,27.498,4121;89.55546,27.49756,4119;89.55722,27.49675,4116;89.55934,27.49504,4110;89.56032,27.49499,4100;89.56078,27.49445,4092;89.56265,27.49428,4077;89.56477,27.4936,4049;89.56568,27.49421,4030;89.56587,27.49406,4020;89.5684,27.4949,3935;89.56863,27.49446,3902;89.5689,27.49432,3886;89.56899,27.49364,3857;89.56989,27.49347,3840;89.57012,27.49324,3827;89.56972,27.49175,3791;89.5701,27.49138,3778;89.57027,27.49081,3760;89.57112,27.4902,3737;89.5717,27.49044,3722;89.57203,27.49015,3695;89.57231,27.49018,3684;89.57287,27.48926,3644;89.57307,27.48944,3638;89.57368,27.4894,3624;89.57429,27.48961,3618;89.57421,27.48947,3614;89.57476,27.48936,3603;89.57461,27.48913,3596;89.57534,27.4886,3570;89.57587,27.48913,3564;89.57609,27.48996,3559;89.57704,27.49069,3543;89.57717,27.49115,3548;89.57835,27.49091,3514;89.57924,27.49116,3499;89.57955,27.49142,3498;89.58011,27.49115,3477;89.58166,27.49139,3453;89.58242,27.49093,3431;89.5835,27.49078,3426;89.58319,27.49023,3401;89.58385,27.49009,3391;89.58407,27.48948,3359;89.58448,27.48924,3346;89.58475,27.48937,3341;89.58609,27.48891,3313;89.58657,27.48841,3297;89.58723,27.48895,3292;89.58813,27.48865,3275;89.58878,27.48866,3264;89.59024,27.48906,3232;89.59165,27.48864,3211;89.5934,27.48991,3164;89.59492,27.48993,3119;89.5956,27.4907,3090;89.60253,27.48912,3014;89.60449,27.48817,3011;89.60631,27.48796,3006;89.60711,27.48811,3008;89.61046,27.48976,2982;89.61162,27.48946,2970;89.61289,27.48965,2959;89.61544,27.48876,2913;89.61612,27.48759,2851;89.6169,27.48699,2816;89.61795,27.48695,2790;89.61884,27.48668,2769;89.6187,27.48645,2762;89.61905,27.4863,2756;89.619,27.48612,2751;89.61966,27.48557,2732;89.62237,27.48427,2687;89.62345,27.48398,2681;89.62369,27.48373,2672", "duration": "5 – 6 days", "playSeconds": 110, "followZoom": 13.8}];
+
+/* ================= GEOMETRY HELPERS ================= */
+var RAD = Math.PI / 180;
+function hav(a, b) {
+  var dLat = (b[1] - a[1]) * RAD, dLon = (b[0] - a[0]) * RAD;
+  var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[1] * RAD) * Math.cos(b[1] * RAD) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 6371000 * 2 * Math.asin(Math.sqrt(s));
+}
+function bearing(a, b) {
+  var y = Math.sin((b[0] - a[0]) * RAD) * Math.cos(b[1] * RAD);
+  var x = Math.cos(a[1] * RAD) * Math.sin(b[1] * RAD) - Math.sin(a[1] * RAD) * Math.cos(b[1] * RAD) * Math.cos((b[0] - a[0]) * RAD);
+  return (Math.atan2(y, x) / RAD + 360) % 360;
+}
+function lerpAngle(a, b, t) { var d = ((b - a + 540) % 360) - 180; return (a + d * t + 360) % 360; }
+function fmtM(m) { return Math.round(m).toLocaleString('en-US') + ' m'; }
+function fmtMin(h) {
+  var m = Math.max(5, Math.round(h * 60 / 5) * 5);
+  return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+}
+function hikeHours(km, up, down) { return km / 4 + up / 450 + down / 1500; }  // walking pace + climb, tuned for altitude
+function half(x) { return Math.round(x * 2) / 2; }
+
+/* Turn a trek definition into everything the UI needs. */
+function build(trek) {
+  var c = typeof trek.route === 'string'
+    ? trek.route.split(';').map(function (s) { return s.split(',').map(Number); })
+    : trek.route;
+  var cum = [0], up = 0, down = 0, lo = Infinity, hi = -Infinity, climbed = [0], ref = c[0][2];
+  for (var i = 0; i < c.length; i++) {
+    if (i) {
+      cum.push(cum[i - 1] + hav(c[i - 1], c[i]));
+      var dh = c[i][2] - ref;   // 3 m hysteresis: ignore small elevation noise
+      if (dh > 3) { up += dh; ref = c[i][2]; } else if (dh < -3) { down -= dh; ref = c[i][2]; }
+      climbed.push(up);
+    }
+    lo = Math.min(lo, c[i][2]); hi = Math.max(hi, c[i][2]);
+  }
+  var total = cum[cum.length - 1];
+  var m = {trek: trek, c: c, cum: cum, climbed: climbed, total: total, up: up, down: down, lo: lo, hi: hi};
+  var wps = (trek.waypoints && trek.waypoints.length >= 2 ? trek.waypoints : [{km: 0, name: 'Start'}, {km: 999, name: 'Finish', leg: 'Start to finish'}]);
+  m.wps = wps.map(function (w) {
+    var d = Math.min(total, w.km * 1000), p = at(m, d);
+    return {name: w.name, leg: w.leg, approx: w.approx, d: d, lon: p.lon, lat: p.lat, ele: p.ele, up: p.up};
+  });
+  m.segs = [];
+  for (var k = 1; k < m.wps.length; k++) {
+    var a = m.wps[k - 1], b = m.wps[k], sUp = Math.max(0, b.up - a.up), sDown = Math.max(0, sUp - (b.ele - a.ele));
+    m.segs.push({name: b.leg || (a.name + ' to ' + b.name), from: a.d, to: b.d, up: sUp, down: sDown, hours: hikeHours((b.d - a.d) / 1000, sUp, sDown)});
+  }
+  m.hours = hikeHours(total / 1000, up, down);
+  return m;
+}
+/* Point at distance d (metres) along the route. */
+function at(m, d) {
+  d = Math.max(0, Math.min(m.total, d));
+  var lo = 0, hi = m.cum.length - 1;
+  while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (m.cum[mid] <= d) lo = mid; else hi = mid; }
+  var a = m.c[lo], b = m.c[hi], span = m.cum[hi] - m.cum[lo] || 1, t = (d - m.cum[lo]) / span;
+  var ele = a[2] + (b[2] - a[2]) * t;
+  return {lon: a[0] + (b[0] - a[0]) * t, lat: a[1] + (b[1] - a[1]) * t, ele: ele, i: lo,
+          up: m.climbed[lo] + (m.climbed[hi] - m.climbed[lo]) * t};
+}
+function slice(m, d0, d1) {
+  var p0 = at(m, d0), p1 = at(m, d1), out = [[p0.lon, p0.lat]];
+  for (var i = 0; i < m.c.length; i++) if (m.cum[i] > d0 && m.cum[i] < d1) out.push([m.c[i][0], m.c[i][1]]);
+  out.push([p1.lon, p1.lat]);
+  return out;
+}
+
+/* ================= MAP ================= */
+var $ = function (id) { return document.getElementById(id); };
+var M, map, markers = [], hiker, progress = 0, playing = false, follow = true, camBearing = 0, lastT = 0, activeSeg = -1, awayView = null;
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function showMsg(text, ms) { var el = $('msg'); el.textContent = text; el.style.display = 'block'; if (ms) setTimeout(function () { el.style.display = 'none'; }, ms); }
+
+if (!window.maplibregl) {
+  showMsg('The map library could not load. Check the internet connection and reload.');
+} else {
+  map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      sources: {
+        sat: {type: 'raster', tiles: CONFIG.imagery.tiles, tileSize: 256, maxzoom: CONFIG.imagery.maxzoom, attribution: CONFIG.imagery.attribution},
+        dem: {type: 'raster-dem', tiles: CONFIG.terrain.tiles, tileSize: 256, maxzoom: CONFIG.terrain.maxzoom, encoding: CONFIG.terrain.encoding, attribution: CONFIG.terrain.attribution},
+        demShade: {type: 'raster-dem', tiles: CONFIG.terrain.tiles, tileSize: 256, maxzoom: CONFIG.terrain.maxzoom, encoding: CONFIG.terrain.encoding}
+      },
+      layers: [
+        {id: 'sat', type: 'raster', source: 'sat', paint: {'raster-saturation': -0.15, 'raster-brightness-max': 0.92}},
+        {id: 'shade', type: 'hillshade', source: 'demShade', paint: {'hillshade-exaggeration': 0.35, 'hillshade-shadow-color': '#06120c', 'hillshade-highlight-color': '#ffffff', 'hillshade-accent-color': '#06120c'}}
+      ],
+      terrain: {source: 'dem', exaggeration: CONFIG.exaggeration},
+      sky: {'sky-color': '#86b0d6', 'horizon-color': '#e3ebe6', 'fog-color': '#cfdbd4', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.25, 'atmosphere-blend': 0.5}
+    },
+    center: [89.5234, 27.4894], zoom: 12, pitch: 60, bearing: 235,
+    maxPitch: 80, attributionControl: false
+  });
+  map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({maxWidth: 110}), 'bottom-right');
+  map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: TREKS[0].attribution || undefined}), 'bottom-right');
+
+  var gotTile = false, touched = false;
+  map.on('sourcedata', function (e) { if (e.tile) gotTile = true; });
+  setTimeout(function () { if (!gotTile) showMsg('Map tiles could not load. This page needs internet access for satellite imagery and terrain; open it directly in a browser.', 12000); }, 10000);
+  // Once the terrain has arrived, re-frame the route and re-seat the markers on the real ground height.
+  map.once('idle', function () { if (!touched && !playing && progress === 0) overview(false); markers.concat([hiker]).forEach(function (mk) { mk.setLngLat(mk.getLngLat()); }); });
+  ['mousedown', 'touchstart', 'wheel'].forEach(function (ev) { map.on(ev, function () { touched = true; }); });
+
+  map.on('load', function () {
+    var empty = {type: 'Feature', geometry: {type: 'LineString', coordinates: []}};
+    ['full', 'done', 'seg'].forEach(function (id) { map.addSource(id, {type: 'geojson', data: empty}); });
+    var round = {'line-cap': 'round', 'line-join': 'round'};
+    map.addLayer({id: 'full-case', type: 'line', source: 'full', layout: round, paint: {'line-color': '#0e1d15', 'line-width': 7, 'line-opacity': 0.75}});
+    map.addLayer({id: 'full', type: 'line', source: 'full', layout: round, paint: {'line-color': '#eef2ea', 'line-width': 3, 'line-dasharray': [0.2, 1.8]}});
+    map.addLayer({id: 'seg', type: 'line', source: 'seg', layout: round, paint: {'line-color': '#eef2ea', 'line-width': 9, 'line-opacity': 0.35}});
+    map.addLayer({id: 'done', type: 'line', source: 'done', layout: round, paint: {'line-color': '#ff7a1a', 'line-width': 4.5}});
+    hiker = new maplibregl.Marker({element: Object.assign(document.createElement('div'), {className: 'hiker'})});
+    loadTrek(0);
+  });
+
+  /* Any hands-on map movement hands the camera back to the visitor. */
+  ['dragstart', 'wheel', 'touchstart'].forEach(function (ev) {
+    map.on(ev, function (e) { if (playing && follow && (ev !== 'dragstart' || e.originalEvent)) setFollow(false); });
+  });
+}
+
+function overview(animate) {
+  var b = new maplibregl.LngLatBounds();
+  M.c.forEach(function (p) { b.extend([p[0], p[1]]); });
+  var wide = window.innerWidth > 820;
+  // padding keeps the route clear of the info panel and the dock; it also stays in force for the fly-through
+  map.fitBounds(b, {
+    padding: {top: 90, bottom: 250, left: wide ? 400 : 40, right: 90},
+    bearing: (bearing(M.c[0], M.c[M.c.length - 1]) + 15) % 360,
+    pitch: map.getTerrain() ? 55 : 0,
+    duration: animate && !reduceMotion ? 2200 : 0
+  });
+}
+
+function loadTrek(i) {
+  stop();
+  M = build(TREKS[i]);
+  var t = M.trek;
+  $('title').innerHTML = t.title;
+  $('region').textContent = t.region || '';
+  var lowH = half(M.hours), highH = half(M.hours * 1.35);
+  var stats = [
+    ['Distance', (M.total / 1000).toFixed(1) + ' km'],
+    ['Duration', t.duration || ((lowH === highH ? lowH : lowH + ' – ' + highH) + ' hrs')],
+    [M.down > 50 ? 'Ascent / descent' : 'Elevation gain', M.down > 50 ? '+' + fmtM(M.up) + ' <small>/ −' + fmtM(M.down) + '</small>' : fmtM(M.up)],
+    ['Highest point', fmtM(M.hi), true],
+    ['Difficulty', t.difficulty || '—'],
+    ['Best season', t.season || '—']
+  ];
+  $('stats').innerHTML = stats.map(function (s) { return '<div' + (s[2] ? ' class="key"' : '') + '><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('');
+  $('segs').innerHTML = M.segs.map(function (s, k) {
+    return '<li><button data-k="' + k + '"><span class="n">' + (k + 1) + '</span><span class="t">' + s.name + '</span><span class="m">' +
+      ((s.to - s.from) / 1000).toFixed(1) + ' km · ' + fmtMin(s.hours) + ' · +' + Math.round(s.up) + ' m' + (s.down > 50 ? ' / −' + Math.round(s.down) + ' m' : '') + '</span></button></li>';
+  }).join('');
+  $('notes').innerHTML = (t.notes || []).map(function (n) { return '<li>' + n + '</li>'; }).join('');
+  $('notes').previousElementSibling.hidden = !(t.notes && t.notes.length);
+  $('badge').textContent = t.sourceNote ? t.sourceNote : t.indicative
+    ? 'Indicative route: endpoints are verified, the line between them follows the terrain model. Replace with a GPS recording before publishing.'
+    : 'Route drawn from the loaded GPS track.';
+
+  map.getSource('full').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: M.c.map(function (p) { return [p[0], p[1]]; })}});
+  map.getSource('seg').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: []}});
+  markers.forEach(function (mk) { mk.remove(); }); markers = [];
+  M.wps.forEach(function (w, k) {
+    var el = document.createElement('div');
+    el.className = 'wp' + (k === M.wps.length - 1 ? ' end' : '');
+    el.innerHTML = '<i></i><span>' + w.name + '<small>' + fmtM(w.ele) + (w.approx ? ' · position approx.' : '') + '</small></span>';
+    markers.push(new maplibregl.Marker({element: el, anchor: 'left', offset: [-9, 0]}).setLngLat([w.lon, w.lat]).addTo(map));
+  });
+  hiker.setLngLat([M.c[0][0], M.c[0][1]]).addTo(map);
+  drawProfile();
+  setProgress(0);
+  overview(false);
+}
+
+/* ================= ELEVATION PROFILE ================= */
+var yLo, yHi;
+function drawProfile() {
+  yLo = Math.floor((M.lo - 30) / 100) * 100; yHi = Math.ceil((M.hi + 30) / 100) * 100;
+  var X = function (d) { return d / M.total * 1000; }, Y = function (e) { return 100 - (e - yLo) / (yHi - yLo) * 100; };
+  var line = M.c.map(function (p, i) { return (i ? 'L' : 'M') + X(M.cum[i]).toFixed(1) + ' ' + Y(p[2]).toFixed(1); }).join('');
+  var svg = '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2ea" stop-opacity=".28"/><stop offset="1" stop-color="#eef2ea" stop-opacity=".03"/></linearGradient>' +
+    '<clipPath id="doneClip"><rect id="doneRect" x="0" y="0" width="0" height="100"/></clipPath></defs>';
+  var steps = 3;
+  for (var s = 0; s <= steps; s++) { var e = yLo + (yHi - yLo) * s / steps; svg += '<line x1="0" x2="1000" y1="' + Y(e) + '" y2="' + Y(e) + '" stroke="#eef2ea" stroke-opacity=".1" vector-effect="non-scaling-stroke"/>'; }
+  M.wps.forEach(function (w, k) { if (k && k < M.wps.length - 1) svg += '<line x1="' + X(w.d) + '" x2="' + X(w.d) + '" y1="0" y2="100" stroke="#eef2ea" stroke-opacity=".22" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'; });
+  svg += '<path d="' + line + 'L1000 100L0 100Z" fill="url(#g)"/>' +
+    '<path d="' + line + '" fill="none" stroke="#eef2ea" stroke-opacity=".6" stroke-width="1.5" vector-effect="non-scaling-stroke"/>' +
+    '<path d="' + line + '" fill="none" stroke="#ff7a1a" stroke-width="2.5" vector-effect="non-scaling-stroke" clip-path="url(#doneClip)"/>';
+  $('prof').innerHTML = svg;
+  var wrap = $('profWrap');
+  Array.prototype.slice.call(wrap.querySelectorAll('.ax,.wpt')).forEach(function (n) { n.remove(); });
+  for (var s2 = 1; s2 <= steps; s2++) { var e2 = yLo + (yHi - yLo) * s2 / steps; var a = document.createElement('div'); a.className = 'ax'; a.style.top = Y(e2) + '%'; a.textContent = fmtM(e2); wrap.appendChild(a); }
+  var lastShown = -1;
+  M.wps.forEach(function (w, k) {
+    var f = w.d / M.total, edge = k === 0 || k === M.wps.length - 1;
+    if (!edge && (f - lastShown < 0.11 || 1 - f < 0.11 || f < 0.11)) return;
+    if (!edge) lastShown = f;
+    var n = document.createElement('div');
+    n.className = 'wpt' + (k === 0 ? ' first' : k === M.wps.length - 1 ? ' last' : '');
+    n.style.left = (w.d / M.total * 100) + '%'; n.textContent = w.name; wrap.appendChild(n);
+  });
+}
+
+/* ================= PROGRESS / PLAYBACK ================= */
+function setProgress(p) {
+  progress = Math.max(0, Math.min(1, p));
+  var d = progress * M.total, pt = at(M, d);
+  map.getSource('done').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: slice(M, 0, d)}});
+  hiker.setLngLat([pt.lon, pt.lat]);
+  $('rDist').textContent = (d / 1000).toFixed(1) + ' km';
+  $('rEle').textContent = fmtM(pt.ele);
+  $('rUp').textContent = '+' + fmtM(pt.up);
+  var k = 0; while (k < M.segs.length - 1 && d >= M.segs[k].to) k++;
+  $('rSeg').textContent = M.segs.length > 1 ? 'Segment ' + (k + 1) + ' · ' + M.segs[k].name : '';
+  if (k !== activeSeg) { activeSeg = k; Array.prototype.forEach.call($('segs').children, function (li, j) { li.classList.toggle('on', j === k); }); }
+  $('scrub').value = Math.round(progress * 1000);
+  $('cursor').style.left = 'calc(' + (progress * 100) + '% - 1px)';
+  $('cursor').style.setProperty('--y', (100 - (pt.ele - yLo) / (yHi - yLo) * 100) + '%');
+  var r = document.getElementById('doneRect'); if (r) r.setAttribute('width', progress * 1000);
+  return pt;
+}
+function setPlayIcon() {
+  $('playIcon').innerHTML = playing ? '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>' : '<path d="M7 4v16l13-8z"/>';
+  $('play').setAttribute('aria-label', playing ? 'Pause' : (progress >= 1 ? 'Replay the trek' : 'Play the trek'));
+}
+function setFollow(on) { follow = on; $('bFollow').setAttribute('aria-pressed', on); }
+function stop() { playing = false; if (map) setPlayIcon(); }
+function headingAt(d) { var a = at(M, d), b = at(M, Math.min(M.total, d + 300)); return (a.lon === b.lon && a.lat === b.lat) ? camBearing : bearing([a.lon, a.lat], [b.lon, b.lat]); }
+function frame(t) {
+  if (!playing) return;
+  var dt = Math.min(250, t - lastT); lastT = t;
+  var pt = setProgress(progress + dt / ((M.trek.playSeconds || CONFIG.playSeconds) * 1000));
+  if (follow) {
+    camBearing = lerpAngle(camBearing, headingAt(progress * M.total), 0.03);
+    map.jumpTo({center: [pt.lon, pt.lat], bearing: camBearing, pitch: map.getTerrain() ? 66 : 0, zoom: M.trek.followZoom || 15});
+  }
+  if (progress >= 1) { stop(); return; }
+  requestAnimationFrame(frame);
+}
+function play() {
+  if (progress >= 1) setProgress(0);
+  playing = true; setPlayIcon(); awayView = null;
+  var begin = function () { if (!playing) return; lastT = performance.now(); requestAnimationFrame(frame); };
+  if (follow) {
+    var pt = at(M, progress * M.total); camBearing = headingAt(progress * M.total);
+    var cam = {center: [pt.lon, pt.lat], bearing: camBearing, pitch: map.getTerrain() ? 66 : 0, zoom: M.trek.followZoom || 15};
+    if (reduceMotion) { map.jumpTo(cam); begin(); }
+    else { map.flyTo(Object.assign(cam, {duration: 1800})); setTimeout(begin, 1850); }
+  } else begin();
+}
+
+/* ================= UI WIRING ================= */
+if (map) {
+  $('play').onclick = function () { if (playing) stop(); else play(); };
+  $('scrub').oninput = function () { stop(); setProgress(this.value / 1000); };
+  var wrap = $('profWrap'), dragging = false;
+  var scrubTo = function (e) { var r = wrap.getBoundingClientRect(); stop(); setProgress((e.clientX - r.left) / r.width); };
+  wrap.addEventListener('pointerdown', function (e) { dragging = true; wrap.setPointerCapture(e.pointerId); scrubTo(e); });
+  wrap.addEventListener('pointermove', function (e) { if (dragging) scrubTo(e); });
+  wrap.addEventListener('pointerup', function () { dragging = false; });
+  wrap.addEventListener('pointercancel', function () { dragging = false; });
+
+  $('segs').onclick = function (e) {
+    var btn = e.target.closest('button'); if (!btn) return;
+    var s = M.segs[+btn.dataset.k]; stop();
+    var coords = slice(M, s.from, s.to);
+    map.getSource('seg').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: coords}});
+    setProgress(s.from / M.total);
+    var b = new maplibregl.LngLatBounds(); coords.forEach(function (c) { b.extend(c); });
+    var wide = window.innerWidth > 820;
+    map.fitBounds(b, {padding: {top: 110, bottom: 270, left: wide ? 420 : 50, right: 110}, bearing: bearing(coords[0], coords[coords.length - 1]),
+      pitch: map.getTerrain() ? 60 : 0, maxZoom: 16, duration: reduceMotion ? 0 : 1600});
+    $('info').classList.remove('open');
+  };
+  $('b3d').onclick = function () {
+    var on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', on);
+    map.setTerrain(on ? {source: 'dem', exaggeration: CONFIG.exaggeration} : null);
+    map.easeTo({pitch: on ? 58 : 0, duration: reduceMotion ? 0 : 800});
+  };
+  $('bFollow').onclick = function () { setFollow(!follow); };
+  $('bReset').onclick = function () { stop(); awayView = null; overview(true); };
+  $('bWhere').onclick = function () {
+    stop();
+    if (awayView) { map.flyTo(Object.assign(awayView, {duration: reduceMotion ? 0 : 2500})); awayView = null; this.textContent = 'Where in Bhutan?'; return; }
+    awayView = {center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing()};
+    map.flyTo({center: [90.43, 27.45], zoom: 7.4, pitch: 0, bearing: 0, duration: reduceMotion ? 0 : 2500});
+    this.textContent = 'Back to the trail';
+  };
+  $('infoToggle').onclick = function () { var open = $('info').classList.toggle('open'); this.setAttribute('aria-expanded', open); this.textContent = open ? 'Close info' : 'Trek info'; };
+  $('trekPick').onchange = function () { loadTrek(+this.value); };
+  window.addEventListener('keydown', function (e) { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); $('play').click(); } });
+
+  /* ---------- GPX import: drop a file on the map or use the button ---------- */
+  $('bGpx').onclick = function () { $('gpxFile').click(); };
+  $('gpxFile').onchange = function () { if (this.files[0]) readGpx(this.files[0]); this.value = ''; };
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); var f = e.dataTransfer.files[0]; if (f) readGpx(f); });
+}
+function refreshPicker(sel) {
+  var p = $('trekPick'); p.hidden = TREKS.length < 2;
+  p.innerHTML = TREKS.map(function (t, i) { return '<option value="' + i + '">' + t.title.replace(/<[^>]+>/g, '') + '</option>'; }).join('');
+  p.value = sel;
+}
+function readGpx(file) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    var doc = new DOMParser().parseFromString(fr.result, 'application/xml');
+    var pts = Array.prototype.slice.call(doc.querySelectorAll('trkpt, rtept')).map(function (n) {
+      var e = n.querySelector('ele');
+      return [parseFloat(n.getAttribute('lon')), parseFloat(n.getAttribute('lat')), e ? parseFloat(e.textContent) : NaN];
+    }).filter(function (p) { return isFinite(p[0]) && isFinite(p[1]); });
+    if (pts.length < 2) { showMsg('No track points found in that file. Export the trek as a GPX track and try again.', 6000); return; }
+    var step = Math.ceil(pts.length / 2000);
+    if (step > 1) pts = pts.filter(function (_, i) { return i % step === 0 || i === pts.length - 1; });
+    var nameEl = doc.querySelector('trk > name, metadata > name, rte > name');
+    var name = (nameEl && nameEl.textContent.trim()) || file.name.replace(/\.gpx$/i, '');
+    var finish = function () {
+      // light smoothing so GPS jitter does not inflate the climb total
+      var sm = pts.map(function (p, i) { var s = 0, n = 0; for (var j = Math.max(0, i - 2); j <= Math.min(pts.length - 1, i + 2); j++) { s += pts[j][2]; n++; } return [p[0], p[1], s / n]; });
+      var safe = document.createElement('div'); safe.textContent = name;
+      TREKS.push({id: 'gpx-' + Date.now(), title: safe.innerHTML, region: 'Loaded from ' + file.name, route: sm});
+      refreshPicker(TREKS.length - 1); loadTrek(TREKS.length - 1);
+    };
+    if (pts.every(function (p) { return isFinite(p[2]); })) finish();
+    else { showMsg('Track has no elevation; reading it from the terrain model…', 4000); sampleDem(pts).then(finish, function () { pts.forEach(function (p) { p[2] = 0; }); finish(); }); }
+  };
+  fr.readAsText(file);
+}
+/* Read elevations for points from the same terrain tiles the map uses (Terrarium encoding). */
+function sampleDem(pts) {
+  var z = 12, n = Math.pow(2, z), cache = {};
+  var tile = function (x, y) {
+    var key = x + '/' + y;
+    if (!cache[key]) cache[key] = fetch(CONFIG.terrain.tiles[0].replace('{z}', z).replace('{x}', x).replace('{y}', y))
+      .then(function (r) { return r.blob(); }).then(createImageBitmap).then(function (bmp) {
+        var c = document.createElement('canvas'); c.width = c.height = 256;
+        var g = c.getContext('2d', {willReadFrequently: true}); g.drawImage(bmp, 0, 0, 256, 256);
+        return g.getImageData(0, 0, 256, 256).data;
+      });
+    return cache[key];
+  };
+  return Promise.all(pts.map(function (p) {
+    var xf = (p[0] + 180) / 360 * n, yf = (1 - Math.asinh(Math.tan(p[1] * RAD)) / Math.PI) / 2 * n;
+    var x = Math.floor(xf), y = Math.floor(yf);
+    return tile(x, y).then(function (d) {
+      var i = (Math.min(255, Math.floor((yf - y) * 256)) * 256 + Math.min(255, Math.floor((xf - x) * 256))) * 4;
+      p[2] = d[i] * 256 + d[i + 1] + d[i + 2] / 256 - 32768;
+    });
+  }));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chele La to Kila Goemba hike — Interactive 3D Trek Map</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Palette: forest green base, off-white neutral, one orange accent (route, play button, key stat). */
+:root{
+  --base:#0e1d15; --base-2:#16291f; --line:rgba(238,242,234,.14);
+  --text:#eef2ea; --muted:#a3b3a7; --accent:#ff7a1a; --accent-ink:#1a0d02;
+  --panel:rgba(14,29,21,.88); --r:14px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Barlow,system-ui,sans-serif;color:var(--text);background:var(--base);overflow:hidden}
+#map{position:absolute;inset:0}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.panel{background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--r)}
+.cond{font-family:"Barlow Condensed",Barlow,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+
+/* Left info panel */
+#info{position:absolute;z-index:3;top:14px;left:14px;width:330px;max-height:calc(100% - 222px);overflow:auto;padding:18px 18px 14px}
+.eyebrow{font-size:14px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:18px;height:2px;background:var(--accent)}
+h1{margin:6px 0 2px;font-size:31px;line-height:1.02;font-weight:700}
+h1 em{font-style:normal;color:var(--accent)}
+.region{font-size:14px;color:var(--muted);margin:0 0 12px}
+#trekPick{width:100%;margin:0 0 12px;background:var(--base-2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:0}
+.stats div{background:var(--base-2);padding:9px 11px}
+.stats dt{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stats dd{margin:2px 0 0;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.stats .key dd{color:var(--accent)}
+.stats small{font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+h2{font-size:15px;margin:16px 0 6px;color:var(--muted);font-weight:600}
+#segs{list-style:none;margin:0;padding:0}
+#segs button{display:grid;grid-template-columns:22px 1fr;gap:2px 8px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:7px 8px}
+#segs button:hover{background:rgba(238,242,234,.06)}
+#segs .n{grid-row:span 2;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--muted);font-size:11px;display:grid;place-items:center;margin-top:1px;color:var(--muted)}
+#segs .t{font-weight:600;font-size:14.5px}
+#segs .m{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+#segs li.on button{background:rgba(238,242,234,.08)}
+#segs li.on .n{border-color:var(--accent);color:var(--text);background:rgba(255,122,26,.18)}
+#notes{margin:0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.45}
+#notes li{margin:3px 0}
+.badge{display:inline-block;font-size:11.5px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:3px 7px;margin-top:10px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{background:var(--base-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px}
+.chip[aria-pressed="true"]{border-color:var(--text)}
+.chip:hover{background:#1d3628}
+
+/* Bottom dock: playback + elevation profile */
+#dock{position:absolute;z-index:3;left:14px;right:14px;bottom:14px;padding:12px 14px 10px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center}
+#play{width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+#play svg{width:20px;height:20px;fill:currentColor}
+#play:hover{filter:brightness(1.08)}
+#readout{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;font-variant-numeric:tabular-nums}
+#readout b{font-size:19px;font-weight:600}
+#readout span{font-size:13px;color:var(--muted)}
+#readout .seg{margin-left:auto;font-size:13.5px;color:var(--text)}
+#profWrap{grid-column:1/-1;position:relative;height:104px;touch-action:none;cursor:ew-resize}
+#prof{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ax{position:absolute;left:0;font-size:10.5px;color:var(--muted);transform:translateY(-50%);pointer-events:none;background:rgba(14,29,21,.6);padding:0 3px;border-radius:3px}
+.wpt{position:absolute;bottom:2px;font-size:10.5px;color:var(--muted);transform:translateX(-50%);white-space:nowrap;pointer-events:none}
+.wpt.first{transform:none;left:14px!important}.wpt.last{transform:translateX(-100%)}
+#cursor{position:absolute;top:0;bottom:0;width:2px;background:var(--text);pointer-events:none;left:0}
+#cursor::after{content:"";position:absolute;left:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--text);top:var(--y,50%);transform:translateY(-50%)}
+#scrub{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:0;height:14px}
+
+/* Map markers */
+.wp{display:flex;align-items:center;gap:6px;pointer-events:none;transform:translateY(-2px)}
+.wp i{width:12px;height:12px;border-radius:50%;background:var(--text);border:3px solid var(--base);box-shadow:0 0 0 1.5px var(--text)}
+.wp.end i{background:var(--accent)}
+.wp span{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.wp small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.hiker{width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 6px rgba(255,122,26,.3),0 2px 6px rgba(0,0,0,.5)}
+
+#msg{position:absolute;z-index:5;top:14px;left:50%;transform:translateX(-50%);padding:10px 14px;font-size:13.5px;max-width:min(520px,90vw);display:none}
+#infoToggle{display:none}
+.maplibregl-ctrl-attrib{font-size:10.5px}
+.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left{bottom:196px}
+
+@media (max-width:820px){
+  #info{left:8px;right:8px;top:8px;width:auto;max-height:55%;padding:14px;display:none}
+  #info.open{display:block}
+  #infoToggle{display:block;position:absolute;z-index:4;top:10px;left:10px}
+  #info.open ~ #infoToggle{top:auto;bottom:206px}
+  #dock{left:8px;right:8px;bottom:8px}
+  h1{font-size:26px}
+  #readout .seg{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="3D map of the trekking route"></div>
+
+<aside id="info" class="panel" aria-label="Trek details">
+  <div class="eyebrow cond">Trekking route</div>
+  <h1 class="cond" id="title"></h1>
+  <p class="region" id="region"></p>
+  <select id="trekPick" aria-label="Choose a trek" hidden></select>
+  <dl class="stats" id="stats"></dl>
+  <h2 class="cond">Route segments</h2>
+  <ol id="segs"></ol>
+  <h2 class="cond">Before you go</h2>
+  <ul id="notes"></ul>
+  <div class="badge" id="badge"></div>
+  <div class="tools">
+    <button class="chip" id="b3d" aria-pressed="true">3D terrain</button>
+    <button class="chip" id="bFollow" aria-pressed="true">Follow camera</button>
+    <button class="chip" id="bWhere">Where in Bhutan?</button>
+    <button class="chip" id="bReset">Reset view</button>
+    <button class="chip" id="bGpx">Load a GPX track</button>
+    <input type="file" id="gpxFile" accept=".gpx,application/gpx+xml" hidden>
+  </div>
+</aside>
+<button class="chip" id="infoToggle" aria-expanded="false">Trek info</button>
+
+<section id="dock" class="panel" aria-label="Route playback and elevation profile">
+  <button id="play" aria-label="Play the trek"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4v16l13-8z"/></svg></button>
+  <div id="readout">
+    <div><b id="rDist">0.0 km</b> <span>from start</span></div>
+    <div><b id="rEle">–</b> <span>elevation</span></div>
+    <div><b id="rUp">–</b> <span>climbed</span></div>
+    <div class="seg" id="rSeg"></div>
+  </div>
+  <div id="profWrap" aria-hidden="true"><svg id="prof" viewBox="0 0 1000 100" preserveAspectRatio="none"></svg><div id="cursor"></div></div>
+  <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Position along the route">
+</section>
+<div id="msg" class="panel" role="status"></div>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script>
+/* ================= CONFIG =================
+   Tile sources. Both work without a key for development.
+   For the live commercial site, swap in a keyed provider (see notes in the hand-over). */
+var CONFIG = {
+  imagery: {
+    tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    maxzoom: 17,
+    attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'
+  },
+  terrain: {
+    tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+    encoding: 'terrarium', maxzoom: 14,
+    attribution: 'Terrain: Mapzen / AWS Terrain Tiles'
+  },
+  exaggeration: 1,      // keep at 1 (true scale): MapLibre 5.x misplaces HTML markers on exaggerated terrain
+  playSeconds: 45       // length of the fly-through
+};
+
+/* ================= TREKS =================
+   One object per trek. route = "lon,lat,ele;lon,lat,ele;..." (ele in metres).
+   waypoints sit at a distance (km) along the route; consecutive waypoints define the segments. */
+var TREKS = [{"id": "kila", "title": "Chele La to <em>Kila Goemba</em>", "region": "Paro–Haa ridge · one way", "difficulty": "Easy to moderate (high altitude)", "season": "Mar – May · Sep – Nov", "notes": ["The walk starts near 3,800 m, so even gentle slopes feel hard. Go slowly.", "Mostly downhill to the nunnery; the return to the pass is the climb. Many groups arrange a pickup on the road below Kila instead.", "Elevations here come from the terrain model; brochures often quote 3,988 m for Chele La.", "Wind and cloud build after midday. Carry a warm layer."], "sourceNote": "Trail line from OpenStreetMap paths; elevations from the SRTM terrain model. Place and camp names follow OpenStreetMap. Walk it with your guide and check names against your own itinerary before publishing.", "attribution": "Trails &copy; OpenStreetMap contributors, routed with BRouter", "waypoints": [{"km": 0, "name": "Chele La", "leg": ""}, {"km": 999, "name": "Kila Goemba (nunnery)", "leg": "Chele La to Kila Goemba"}], "route": "89.34667,27.36986,3791;89.34647,27.36996,3793;89.34583,27.36992,3795;89.34551,27.36996,3795;89.34458,27.37064,3800;89.34385,27.37085,3808;89.34347,27.37116,3808;89.34323,27.37145,3809;89.34319,27.37191,3814;89.34311,27.37214,3819;89.34316,27.37237,3821;89.34325,27.37238,3821;89.34335,27.37264,3819;89.34345,27.37269,3814;89.34341,27.37278,3809;89.34354,27.37326,3805;89.34325,27.37399,3792;89.34348,27.37448,3786;89.3437,27.37451,3772;89.34376,27.37499,3766;89.34406,27.37551,3750;89.34406,27.37563,3746;89.34416,27.37568,3744;89.34407,27.37592,3741;89.34414,27.3762,3738;89.34404,27.37657,3733;89.34417,27.37696,3725;89.34405,27.37744,3717;89.34412,27.37765,3713;89.3442,27.37763,3712;89.34418,27.37804,3713;89.34433,27.37855,3716;89.34448,27.37862,3716;89.34449,27.37879,3717;89.34502,27.37907,3717;89.34525,27.37927,3717;89.34569,27.37977,3721;89.34582,27.38012,3726;89.34563,27.38076,3732;89.34544,27.38096,3738;89.34537,27.38121,3743;89.34538,27.38158,3743;89.34527,27.38187,3742;89.34515,27.38195,3741;89.34511,27.3822,3740;89.3449,27.38232,3738;89.3448,27.38252,3737;89.34466,27.38263,3736;89.34403,27.38273,3734;89.34373,27.38288,3733;89.3434,27.38287,3731;89.34313,27.38302,3727;89.34293,27.38346,3718;89.34282,27.38405,3701;89.34271,27.3842,3695;89.34275,27.3844,3689;89.34285,27.38451,3686;89.34281,27.38458,3684;89.34264,27.3846,3685;89.34242,27.38455,3686;89.34237,27.3846,3688;89.34225,27.38494,3685;89.34187,27.38535,3680;89.34183,27.38562,3679;89.34161,27.38594,3681;89.34163,27.38616,3682;89.34153,27.38626,3684;89.34152,27.38635,3684;89.34175,27.3867,3676;89.34192,27.38677,3671;89.34202,27.38688,3663;89.34205,27.38706,3657;89.34244,27.38736,3640;89.34249,27.38763,3637;89.34259,27.38774,3633;89.34246,27.38787,3632;89.34253,27.38797,3631;89.34242,27.3881,3631;89.34244,27.38825,3628;89.34237,27.38849,3625;89.34251,27.38869,3621;89.34243,27.3892,3617;89.34248,27.38935,3611;89.3424,27.38957,3610;89.34129,27.39032,3632;89.34129,27.39037,3636;89.34173,27.39068,3625;89.34222,27.39126,3620;89.34278,27.39158,3621;89.34285,27.39185,3624;89.34304,27.39198,3627;89.34331,27.39242,3645;89.34329,27.39257,3650;89.34289,27.39245,3655"}];
+
+/* ================= GEOMETRY HELPERS ================= */
+var RAD = Math.PI / 180;
+function hav(a, b) {
+  var dLat = (b[1] - a[1]) * RAD, dLon = (b[0] - a[0]) * RAD;
+  var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[1] * RAD) * Math.cos(b[1] * RAD) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 6371000 * 2 * Math.asin(Math.sqrt(s));
+}
+function bearing(a, b) {
+  var y = Math.sin((b[0] - a[0]) * RAD) * Math.cos(b[1] * RAD);
+  var x = Math.cos(a[1] * RAD) * Math.sin(b[1] * RAD) - Math.sin(a[1] * RAD) * Math.cos(b[1] * RAD) * Math.cos((b[0] - a[0]) * RAD);
+  return (Math.atan2(y, x) / RAD + 360) % 360;
+}
+function lerpAngle(a, b, t) { var d = ((b - a + 540) % 360) - 180; return (a + d * t + 360) % 360; }
+function fmtM(m) { return Math.round(m).toLocaleString('en-US') + ' m'; }
+function fmtMin(h) {
+  var m = Math.max(5, Math.round(h * 60 / 5) * 5);
+  return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+}
+function hikeHours(km, up, down) { return km / 4 + up / 450 + down / 1500; }  // walking pace + climb, tuned for altitude
+function half(x) { return Math.round(x * 2) / 2; }
+
+/* Turn a trek definition into everything the UI needs. */
+function build(trek) {
+  var c = typeof trek.route === 'string'
+    ? trek.route.split(';').map(function (s) { return s.split(',').map(Number); })
+    : trek.route;
+  var cum = [0], up = 0, down = 0, lo = Infinity, hi = -Infinity, climbed = [0], ref = c[0][2];
+  for (var i = 0; i < c.length; i++) {
+    if (i) {
+      cum.push(cum[i - 1] + hav(c[i - 1], c[i]));
+      var dh = c[i][2] - ref;   // 3 m hysteresis: ignore small elevation noise
+      if (dh > 3) { up += dh; ref = c[i][2]; } else if (dh < -3) { down -= dh; ref = c[i][2]; }
+      climbed.push(up);
+    }
+    lo = Math.min(lo, c[i][2]); hi = Math.max(hi, c[i][2]);
+  }
+  var total = cum[cum.length - 1];
+  var m = {trek: trek, c: c, cum: cum, climbed: climbed, total: total, up: up, down: down, lo: lo, hi: hi};
+  var wps = (trek.waypoints && trek.waypoints.length >= 2 ? trek.waypoints : [{km: 0, name: 'Start'}, {km: 999, name: 'Finish', leg: 'Start to finish'}]);
+  m.wps = wps.map(function (w) {
+    var d = Math.min(total, w.km * 1000), p = at(m, d);
+    return {name: w.name, leg: w.leg, approx: w.approx, d: d, lon: p.lon, lat: p.lat, ele: p.ele, up: p.up};
+  });
+  m.segs = [];
+  for (var k = 1; k < m.wps.length; k++) {
+    var a = m.wps[k - 1], b = m.wps[k], sUp = Math.max(0, b.up - a.up), sDown = Math.max(0, sUp - (b.ele - a.ele));
+    m.segs.push({name: b.leg || (a.name + ' to ' + b.name), from: a.d, to: b.d, up: sUp, down: sDown, hours: hikeHours((b.d - a.d) / 1000, sUp, sDown)});
+  }
+  m.hours = hikeHours(total / 1000, up, down);
+  return m;
+}
+/* Point at distance d (metres) along the route. */
+function at(m, d) {
+  d = Math.max(0, Math.min(m.total, d));
+  var lo = 0, hi = m.cum.length - 1;
+  while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (m.cum[mid] <= d) lo = mid; else hi = mid; }
+  var a = m.c[lo], b = m.c[hi], span = m.cum[hi] - m.cum[lo] || 1, t = (d - m.cum[lo]) / span;
+  var ele = a[2] + (b[2] - a[2]) * t;
+  return {lon: a[0] + (b[0] - a[0]) * t, lat: a[1] + (b[1] - a[1]) * t, ele: ele, i: lo,
+          up: m.climbed[lo] + (m.climbed[hi] - m.climbed[lo]) * t};
+}
+function slice(m, d0, d1) {
+  var p0 = at(m, d0), p1 = at(m, d1), out = [[p0.lon, p0.lat]];
+  for (var i = 0; i < m.c.length; i++) if (m.cum[i] > d0 && m.cum[i] < d1) out.push([m.c[i][0], m.c[i][1]]);
+  out.push([p1.lon, p1.lat]);
+  return out;
+}
+
+/* ================= MAP ================= */
+var $ = function (id) { return document.getElementById(id); };
+var M, map, markers = [], hiker, progress = 0, playing = false, follow = true, camBearing = 0, lastT = 0, activeSeg = -1, awayView = null;
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function showMsg(text, ms) { var el = $('msg'); el.textContent = text; el.style.display = 'block'; if (ms) setTimeout(function () { el.style.display = 'none'; }, ms); }
+
+if (!window.maplibregl) {
+  showMsg('The map library could not load. Check the internet connection and reload.');
+} else {
+  map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      sources: {
+        sat: {type: 'raster', tiles: CONFIG.imagery.tiles, tileSize: 256, maxzoom: CONFIG.imagery.maxzoom, attribution: CONFIG.imagery.attribution},
+        dem: {type: 'raster-dem', tiles: CONFIG.terrain.tiles, tileSize: 256, maxzoom: CONFIG.terrain.maxzoom, encoding: CONFIG.terrain.encoding, attribution: CONFIG.terrain.attribution},
+        demShade: {type: 'raster-dem', tiles: CONFIG.terrain.tiles, tileSize: 256, maxzoom: CONFIG.terrain.maxzoom, encoding: CONFIG.terrain.encoding}
+      },
+      layers: [
+        {id: 'sat', type: 'raster', source: 'sat', paint: {'raster-saturation': -0.15, 'raster-brightness-max': 0.92}},
+        {id: 'shade', type: 'hillshade', source: 'demShade', paint: {'hillshade-exaggeration': 0.35, 'hillshade-shadow-color': '#06120c', 'hillshade-highlight-color': '#ffffff', 'hillshade-accent-color': '#06120c'}}
+      ],
+      terrain: {source: 'dem', exaggeration: CONFIG.exaggeration},
+      sky: {'sky-color': '#86b0d6', 'horizon-color': '#e3ebe6', 'fog-color': '#cfdbd4', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.25, 'atmosphere-blend': 0.5}
+    },
+    center: [89.3440, 27.3812], zoom: 12, pitch: 60, bearing: 235,
+    maxPitch: 80, attributionControl: false
+  });
+  map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({maxWidth: 110}), 'bottom-right');
+  map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: TREKS[0].attribution || undefined}), 'bottom-right');
+
+  var gotTile = false, touched = false;
+  map.on('sourcedata', function (e) { if (e.tile) gotTile = true; });
+  setTimeout(function () { if (!gotTile) showMsg('Map tiles could not load. This page needs internet access for satellite imagery and terrain; open it directly in a browser.', 12000); }, 10000);
+  // Once the terrain has arrived, re-frame the route and re-seat the markers on the real ground height.
+  map.once('idle', function () { if (!touched && !playing && progress === 0) overview(false); markers.concat([hiker]).forEach(function (mk) { mk.setLngLat(mk.getLngLat()); }); });
+  ['mousedown', 'touchstart', 'wheel'].forEach(function (ev) { map.on(ev, function () { touched = true; }); });
+
+  map.on('load', function () {
+    var empty = {type: 'Feature', geometry: {type: 'LineString', coordinates: []}};
+    ['full', 'done', 'seg'].forEach(function (id) { map.addSource(id, {type: 'geojson', data: empty}); });
+    var round = {'line-cap': 'round', 'line-join': 'round'};
+    map.addLayer({id: 'full-case', type: 'line', source: 'full', layout: round, paint: {'line-color': '#0e1d15', 'line-width': 7, 'line-opacity': 0.75}});
+    map.addLayer({id: 'full', type: 'line', source: 'full', layout: round, paint: {'line-color': '#eef2ea', 'line-width': 3, 'line-dasharray': [0.2, 1.8]}});
+    map.addLayer({id: 'seg', type: 'line', source: 'seg', layout: round, paint: {'line-color': '#eef2ea', 'line-width': 9, 'line-opacity': 0.35}});
+    map.addLayer({id: 'done', type: 'line', source: 'done', layout: round, paint: {'line-color': '#ff7a1a', 'line-width': 4.5}});
+    hiker = new maplibregl.Marker({element: Object.assign(document.createElement('div'), {className: 'hiker'})});
+    loadTrek(0);
+  });
+
+  /* Any hands-on map movement hands the camera back to the visitor. */
+  ['dragstart', 'wheel', 'touchstart'].forEach(function (ev) {
+    map.on(ev, function (e) { if (playing && follow && (ev !== 'dragstart' || e.originalEvent)) setFollow(false); });
+  });
+}
+
+function overview(animate) {
+  var b = new maplibregl.LngLatBounds();
+  M.c.forEach(function (p) { b.extend([p[0], p[1]]); });
+  var wide = window.innerWidth > 820;
+  // padding keeps the route clear of the info panel and the dock; it also stays in force for the fly-through
+  map.fitBounds(b, {
+    padding: {top: 90, bottom: 250, left: wide ? 400 : 40, right: 90},
+    bearing: (bearing(M.c[0], M.c[M.c.length - 1]) + 15) % 360,
+    pitch: map.getTerrain() ? 55 : 0,
+    duration: animate && !reduceMotion ? 2200 : 0
+  });
+}
+
+function loadTrek(i) {
+  stop();
+  M = build(TREKS[i]);
+  var t = M.trek;
+  $('title').innerHTML = t.title;
+  $('region').textContent = t.region || '';
+  var lowH = half(M.hours), highH = half(M.hours * 1.35);
+  var stats = [
+    ['Distance', (M.total / 1000).toFixed(1) + ' km'],
+    ['Duration', t.duration || ((lowH === highH ? lowH : lowH + ' – ' + highH) + ' hrs')],
+    [M.down > 50 ? 'Ascent / descent' : 'Elevation gain', M.down > 50 ? '+' + fmtM(M.up) + ' <small>/ −' + fmtM(M.down) + '</small>' : fmtM(M.up)],
+    ['Highest point', fmtM(M.hi), true],
+    ['Difficulty', t.difficulty || '—'],
+    ['Best season', t.season || '—']
+  ];
+  $('stats').innerHTML = stats.map(function (s) { return '<div' + (s[2] ? ' class="key"' : '') + '><dt>' + s[0] + '</dt><dd>' + s[1] + '</dd></div>'; }).join('');
+  $('segs').innerHTML = M.segs.map(function (s, k) {
+    return '<li><button data-k="' + k + '"><span class="n">' + (k + 1) + '</span><span class="t">' + s.name + '</span><span class="m">' +
+      ((s.to - s.from) / 1000).toFixed(1) + ' km · ' + fmtMin(s.hours) + ' · +' + Math.round(s.up) + ' m' + (s.down > 50 ? ' / −' + Math.round(s.down) + ' m' : '') + '</span></button></li>';
+  }).join('');
+  $('notes').innerHTML = (t.notes || []).map(function (n) { return '<li>' + n + '</li>'; }).join('');
+  $('notes').previousElementSibling.hidden = !(t.notes && t.notes.length);
+  $('badge').textContent = t.sourceNote ? t.sourceNote : t.indicative
+    ? 'Indicative route: endpoints are verified, the line between them follows the terrain model. Replace with a GPS recording before publishing.'
+    : 'Route drawn from the loaded GPS track.';
+
+  map.getSource('full').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: M.c.map(function (p) { return [p[0], p[1]]; })}});
+  map.getSource('seg').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: []}});
+  markers.forEach(function (mk) { mk.remove(); }); markers = [];
+  M.wps.forEach(function (w, k) {
+    var el = document.createElement('div');
+    el.className = 'wp' + (k === M.wps.length - 1 ? ' end' : '');
+    el.innerHTML = '<i></i><span>' + w.name + '<small>' + fmtM(w.ele) + (w.approx ? ' · position approx.' : '') + '</small></span>';
+    markers.push(new maplibregl.Marker({element: el, anchor: 'left', offset: [-9, 0]}).setLngLat([w.lon, w.lat]).addTo(map));
+  });
+  hiker.setLngLat([M.c[0][0], M.c[0][1]]).addTo(map);
+  drawProfile();
+  setProgress(0);
+  overview(false);
+}
+
+/* ================= ELEVATION PROFILE ================= */
+var yLo, yHi;
+function drawProfile() {
+  yLo = Math.floor((M.lo - 30) / 100) * 100; yHi = Math.ceil((M.hi + 30) / 100) * 100;
+  var X = function (d) { return d / M.total * 1000; }, Y = function (e) { return 100 - (e - yLo) / (yHi - yLo) * 100; };
+  var line = M.c.map(function (p, i) { return (i ? 'L' : 'M') + X(M.cum[i]).toFixed(1) + ' ' + Y(p[2]).toFixed(1); }).join('');
+  var svg = '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2ea" stop-opacity=".28"/><stop offset="1" stop-color="#eef2ea" stop-opacity=".03"/></linearGradient>' +
+    '<clipPath id="doneClip"><rect id="doneRect" x="0" y="0" width="0" height="100"/></clipPath></defs>';
+  var steps = 3;
+  for (var s = 0; s <= steps; s++) { var e = yLo + (yHi - yLo) * s / steps; svg += '<line x1="0" x2="1000" y1="' + Y(e) + '" y2="' + Y(e) + '" stroke="#eef2ea" stroke-opacity=".1" vector-effect="non-scaling-stroke"/>'; }
+  M.wps.forEach(function (w, k) { if (k && k < M.wps.length - 1) svg += '<line x1="' + X(w.d) + '" x2="' + X(w.d) + '" y1="0" y2="100" stroke="#eef2ea" stroke-opacity=".22" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>'; });
+  svg += '<path d="' + line + 'L1000 100L0 100Z" fill="url(#g)"/>' +
+    '<path d="' + line + '" fill="none" stroke="#eef2ea" stroke-opacity=".6" stroke-width="1.5" vector-effect="non-scaling-stroke"/>' +
+    '<path d="' + line + '" fill="none" stroke="#ff7a1a" stroke-width="2.5" vector-effect="non-scaling-stroke" clip-path="url(#doneClip)"/>';
+  $('prof').innerHTML = svg;
+  var wrap = $('profWrap');
+  Array.prototype.slice.call(wrap.querySelectorAll('.ax,.wpt')).forEach(function (n) { n.remove(); });
+  for (var s2 = 1; s2 <= steps; s2++) { var e2 = yLo + (yHi - yLo) * s2 / steps; var a = document.createElement('div'); a.className = 'ax'; a.style.top = Y(e2) + '%'; a.textContent = fmtM(e2); wrap.appendChild(a); }
+  var lastShown = -1;
+  M.wps.forEach(function (w, k) {
+    var f = w.d / M.total, edge = k === 0 || k === M.wps.length - 1;
+    if (!edge && (f - lastShown < 0.11 || 1 - f < 0.11 || f < 0.11)) return;
+    if (!edge) lastShown = f;
+    var n = document.createElement('div');
+    n.className = 'wpt' + (k === 0 ? ' first' : k === M.wps.length - 1 ? ' last' : '');
+    n.style.left = (w.d / M.total * 100) + '%'; n.textContent = w.name; wrap.appendChild(n);
+  });
+}
+
+/* ================= PROGRESS / PLAYBACK ================= */
+function setProgress(p) {
+  progress = Math.max(0, Math.min(1, p));
+  var d = progress * M.total, pt = at(M, d);
+  map.getSource('done').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: slice(M, 0, d)}});
+  hiker.setLngLat([pt.lon, pt.lat]);
+  $('rDist').textContent = (d / 1000).toFixed(1) + ' km';
+  $('rEle').textContent = fmtM(pt.ele);
+  $('rUp').textContent = '+' + fmtM(pt.up);
+  var k = 0; while (k < M.segs.length - 1 && d >= M.segs[k].to) k++;
+  $('rSeg').textContent = M.segs.length > 1 ? 'Segment ' + (k + 1) + ' · ' + M.segs[k].name : '';
+  if (k !== activeSeg) { activeSeg = k; Array.prototype.forEach.call($('segs').children, function (li, j) { li.classList.toggle('on', j === k); }); }
+  $('scrub').value = Math.round(progress * 1000);
+  $('cursor').style.left = 'calc(' + (progress * 100) + '% - 1px)';
+  $('cursor').style.setProperty('--y', (100 - (pt.ele - yLo) / (yHi - yLo) * 100) + '%');
+  var r = document.getElementById('doneRect'); if (r) r.setAttribute('width', progress * 1000);
+  return pt;
+}
+function setPlayIcon() {
+  $('playIcon').innerHTML = playing ? '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>' : '<path d="M7 4v16l13-8z"/>';
+  $('play').setAttribute('aria-label', playing ? 'Pause' : (progress >= 1 ? 'Replay the trek' : 'Play the trek'));
+}
+function setFollow(on) { follow = on; $('bFollow').setAttribute('aria-pressed', on); }
+function stop() { playing = false; if (map) setPlayIcon(); }
+function headingAt(d) { var a = at(M, d), b = at(M, Math.min(M.total, d + 300)); return (a.lon === b.lon && a.lat === b.lat) ? camBearing : bearing([a.lon, a.lat], [b.lon, b.lat]); }
+function frame(t) {
+  if (!playing) return;
+  var dt = Math.min(250, t - lastT); lastT = t;
+  var pt = setProgress(progress + dt / ((M.trek.playSeconds || CONFIG.playSeconds) * 1000));
+  if (follow) {
+    camBearing = lerpAngle(camBearing, headingAt(progress * M.total), 0.03);
+    map.jumpTo({center: [pt.lon, pt.lat], bearing: camBearing, pitch: map.getTerrain() ? 66 : 0, zoom: M.trek.followZoom || 15});
+  }
+  if (progress >= 1) { stop(); return; }
+  requestAnimationFrame(frame);
+}
+function play() {
+  if (progress >= 1) setProgress(0);
+  playing = true; setPlayIcon(); awayView = null;
+  var begin = function () { if (!playing) return; lastT = performance.now(); requestAnimationFrame(frame); };
+  if (follow) {
+    var pt = at(M, progress * M.total); camBearing = headingAt(progress * M.total);
+    var cam = {center: [pt.lon, pt.lat], bearing: camBearing, pitch: map.getTerrain() ? 66 : 0, zoom: M.trek.followZoom || 15};
+    if (reduceMotion) { map.jumpTo(cam); begin(); }
+    else { map.flyTo(Object.assign(cam, {duration: 1800})); setTimeout(begin, 1850); }
+  } else begin();
+}
+
+/* ================= UI WIRING ================= */
+if (map) {
+  $('play').onclick = function () { if (playing) stop(); else play(); };
+  $('scrub').oninput = function () { stop(); setProgress(this.value / 1000); };
+  var wrap = $('profWrap'), dragging = false;
+  var scrubTo = function (e) { var r = wrap.getBoundingClientRect(); stop(); setProgress((e.clientX - r.left) / r.width); };
+  wrap.addEventListener('pointerdown', function (e) { dragging = true; wrap.setPointerCapture(e.pointerId); scrubTo(e); });
+  wrap.addEventListener('pointermove', function (e) { if (dragging) scrubTo(e); });
+  wrap.addEventListener('pointerup', function () { dragging = false; });
+  wrap.addEventListener('pointercancel', function () { dragging = false; });
+
+  $('segs').onclick = function (e) {
+    var btn = e.target.closest('button'); if (!btn) return;
+    var s = M.segs[+btn.dataset.k]; stop();
+    var coords = slice(M, s.from, s.to);
+    map.getSource('seg').setData({type: 'Feature', geometry: {type: 'LineString', coordinates: coords}});
+    setProgress(s.from / M.total);
+    var b = new maplibregl.LngLatBounds(); coords.forEach(function (c) { b.extend(c); });
+    var wide = window.innerWidth > 820;
+    map.fitBounds(b, {padding: {top: 110, bottom: 270, left: wide ? 420 : 50, right: 110}, bearing: bearing(coords[0], coords[coords.length - 1]),
+      pitch: map.getTerrain() ? 60 : 0, maxZoom: 16, duration: reduceMotion ? 0 : 1600});
+    $('info').classList.remove('open');
+  };
+  $('b3d').onclick = function () {
+    var on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', on);
+    map.setTerrain(on ? {source: 'dem', exaggeration: CONFIG.exaggeration} : null);
+    map.easeTo({pitch: on ? 58 : 0, duration: reduceMotion ? 0 : 800});
+  };
+  $('bFollow').onclick = function () { setFollow(!follow); };
+  $('bReset').onclick = function () { stop(); awayView = null; overview(true); };
+  $('bWhere').onclick = function () {
+    stop();
+    if (awayView) { map.flyTo(Object.assign(awayView, {duration: reduceMotion ? 0 : 2500})); awayView = null; this.textContent = 'Where in Bhutan?'; return; }
+    awayView = {center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing()};
+    map.flyTo({center: [90.43, 27.45], zoom: 7.4, pitch: 0, bearing: 0, duration: reduceMotion ? 0 : 2500});
+    this.textContent = 'Back to the trail';
+  };
+  $('infoToggle').onclick = function () { var open = $('info').classList.toggle('open'); this.setAttribute('aria-expanded', open); this.textContent = open ? 'Close info' : 'Trek info'; };
+  $('trekPick').onchange = function () { loadTrek(+this.value); };
+  window.addEventListener('keydown', function (e) { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); $('play').click(); } });
+
+  /* ---------- GPX import: drop a file on the map or use the button ---------- */
+  $('bGpx').onclick = function () { $('gpxFile').click(); };
+  $('gpxFile').onchange = function () { if (this.files[0]) readGpx(this.files[0]); this.value = ''; };
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); var f = e.dataTransfer.files[0]; if (f) readGpx(f); });
+}
+function refreshPicker(sel) {
+  var p = $('trekPick'); p.hidden = TREKS.length < 2;
+  p.innerHTML = TREKS.map(function (t, i) { return '<option value="' + i + '">' + t.title.replace(/<[^>]+>/g, '') + '</option>'; }).join('');
+  p.value = sel;
+}
+function readGpx(file) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    var doc = new DOMParser().parseFromString(fr.result, 'application/xml');
+    var pts = Array.prototype.slice.call(doc.querySelectorAll('trkpt, rtept')).map(function (n) {
+      var e = n.querySelector('ele');
+      return [parseFloat(n.getAttribute('lon')), parseFloat(n.getAttribute('lat')), e ? parseFloat(e.textContent) : NaN];
+    }).filter(function (p) { return isFinite(p[0]) && isFinite(p[1]); });
+    if (pts.length < 2) { showMsg('No track points found in that file. Export the trek as a GPX track and try again.', 6000); return; }
+    var step = Math.ceil(pts.length / 2000);
+    if (step > 1) pts = pts.filter(function (_, i) { return i % step === 0 || i === pts.length - 1; });
+    var nameEl = doc.querySelector('trk > name, metadata > name, rte > name');
+    var name = (nameEl && nameEl.textContent.trim()) || file.name.replace(/\.gpx$/i, '');
+    var finish = function () {
+      // light smoothing so GPS jitter does not inflate the climb total
+      var sm = pts.map(function (p, i) { var s = 0, n = 0; for (var j = Math.max(0, i - 2); j <= Math.min(pts.length - 1, i + 2); j++) { s += pts[j][2]; n++; } return [p[0], p[1], s / n]; });
+      var safe = document.createElement('div'); safe.textContent = name;
+      TREKS.push({id: 'gpx-' + Date.now(), title: safe.innerHTML, region: 'Loaded from ' + file.name, route: sm});
+      refreshPicker(TREKS.length - 1); loadTrek(TREKS.length - 1);
+    };
+    if (pts.every(function (p) { return isFinite(p[2]); })) finish();
+    else { showMsg('Track has no elevation; reading it from the terrain model…', 4000); sampleDem(pts).then(finish, function () { pts.forEach(function (p) { p[2] = 0; }); finish(); }); }
+  };
+  fr.readAsText(file);
+}
+/* Read elevations for points from the same terrain tiles the map uses (Terrarium encoding). */
+function sampleDem(pts) {
+  var z = 12, n = Math.pow(2, z), cache = {};
+  var tile = function (x, y) {
+    var key = x + '/' + y;
+    if (!cache[key]) cache[key] = fetch(CONFIG.terrain.tiles[0].replace('{z}', z).replace('{x}', x).replace('{y}', y))
+      .then(function (r) { return r.blob(); }).then(createImageBitmap).then(function (bmp) {
+        var c = document.createElement('canvas'); c.width = c.height = 256;
+        var g = c.getContext('2d', {willReadFrequently: true}); g.drawImage(bmp, 0, 0, 256, 256);
+        return g.getImageData(0, 0, 256, 256).data;
+      });
+    return cache[key];
+  };
+  return Promise.all(pts.map(function (p) {
+    var xf = (p[0] + 180) / 360 * n, yf = (1 - Math.asinh(Math.tan(p[1] * RAD)) / Math.PI) / 2 * n;
+    var x = Math.floor(xf), y = Math.floor(yf);
+    return tile(x, y).then(function (d) {
+      var i = (Math.min(255, Math.floor((yf - y) * 256)) * 256 + Math.min(255, Math.floor((xf - x) * 256))) * 4;
+      p[2] = d[i] * 256 + d[i + 1] + d[i + 2] / 256 - 32768;
+    });
+  }));
+}
+</script>
+</body>
+</html>

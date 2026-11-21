@@ -1,0 +1,13 @@
+.notFoundMain {
+  padding: 96px 24px;
+  text-align: center;
+}
+
+.notFoundSubhead {
+  margin: 12px auto 24px;
+  max-width: 420px;
+}
+
+.notFoundCta {
+  padding: 12px 28px;
+}

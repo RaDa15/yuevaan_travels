@@ -1,0 +1,207 @@
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 24px;
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+}
+
+.eyebrowDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.heading {
+  margin-top: 6px;
+}
+
+.introDesc {
+  margin: 0;
+  max-width: 440px;
+  font-size: 15px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.regionPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.regionPill {
+  padding: 3px 9px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.regionPill:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.regionSection {
+  margin-top: 56px;
+}
+
+.regionSectionHead {
+  margin-bottom: 24px;
+  max-width: 680px;
+}
+
+.regionSectionTitle {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  margin: 8px 0 0;
+  color: var(--color-text);
+}
+
+.regionSectionDesc {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.regionsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.elevPill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.locStrong {
+  color: var(--color-neutral);
+}
+
+.pinIcon {
+  color: var(--color-accent);
+}
+
+.trekHubBox {
+  margin: 48px 0;
+  background: var(--color-neutral);
+  border-radius: 20px;
+  padding: 32px;
+  color: var(--color-base);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.16);
+}
+
+.trekHubTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.trekHubEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-footer-muted);
+}
+
+.trekHubEyebrowDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.trekHubTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 3vw, 36px);
+  margin: 8px 0 0;
+  color: var(--color-base);
+  font-weight: 700;
+}
+
+.trekHubDesc {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--color-footer-muted);
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+.trekHubFsBtn {
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trekHubPills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.trekHubIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.emptyState {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+}
+
+.detailMain {
+  padding-top: 8px;
+}
+
+.detailContainer {
+  margin-top: 12px;
+}
+
+.emptyStateText {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}

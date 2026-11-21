@@ -1,0 +1,84 @@
+.heroContainer {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.topSellingSubhead {
+  max-width: 620px;
+}
+
+.viewAllBtn {
+  align-self: flex-start;
+}
+
+.storyBadgeTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.storyBadgeSub {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.storyStatAccent {
+  color: var(--color-accent);
+}
+
+.storyActions {
+  margin-top: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.storyActionBtn {
+  padding: 14px 28px;
+}
+
+.reviewsSection {
+  overflow: hidden;
+}
+
+.playSvg {
+  margin-left: 3px;
+}
+
+.filmPlayHint {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-base);
+}
+
+.filmFallbackBox {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 28px;
+  background: var(--color-neutral);
+}
+
+.filmFallbackImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.45;
+}
+
+.filmFallbackMsg {
+  position: relative;
+  z-index: 2;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-base);
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}

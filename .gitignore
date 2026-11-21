@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+out.prev/
+.data/
+.env*
+!.env.example
+.DS_Store
+public/tour-catalogue.json
+public/videos/Bhutan-Home-Film No-Text 4K.mp4
+public/videos/Discover-Bhutan Full-Film 1080P District-Map.mp4

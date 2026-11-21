@@ -1,0 +1,300 @@
+.stepperGroup {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.stepperBtn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.stepperBtn:hover:not(:disabled) {
+  background-color: var(--color-surface-2);
+}
+
+.stepperBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepperVal {
+  min-width: 38px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  border-left: 1px solid var(--color-border-subtle);
+  border-right: 1px solid var(--color-border-subtle);
+  line-height: 44px;
+}
+
+.drawerNote {
+  font-size: 13px;
+  color: var(--color-muted);
+  padding-bottom: 10px;
+}
+
+.confirmTitle {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.confirmBody {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.confirmSub {
+  font-size: 14.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.confirmBtn {
+  padding: 12px 24px;
+}
+
+.notSentCard {
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 18px;
+  padding: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 48px;
+  align-items: start;
+}
+
+.contactCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.contactFormTitle {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 6px 0 12px;
+}
+
+.contactFormSub {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin-bottom: 28px;
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contactRow2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.contactSubmitBtn {
+  padding: 16px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  margin-top: 8px;
+}
+
+.contactSubmitNote {
+  font-size: 12px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.reachHeading {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 6px 0 20px;
+}
+
+.reachStack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.waHighlightCard {
+  background: rgba(0, 103, 177, 0.06);
+  border: 1.5px solid var(--color-accent);
+  padding: 26px;
+  border-radius: 18px;
+}
+
+.waCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.waCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.waCardDesc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.waCardBtn {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+  display: inline-flex;
+}
+
+.reachInfoCard {
+  padding: 26px;
+}
+
+.reachCardHeading {
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.reachCardText {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.reachCardHours {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.reachEmailHeading {
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.reachEmailLink {
+  color: var(--color-neutral);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 3px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.reachEmailActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.reachGmailLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-neutral);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.reachGmailLink:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.validationBanner {
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background-color: rgba(185, 28, 28, 0.08);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.licencePillCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.licencePillTitle {
+  color: var(--color-text);
+  display: block;
+}
+
+.licencePillMeta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.thankYouWrap {
+  max-width: 720px;
+  padding: 48px 24px;
+}
+
+.termsError {
+  margin-bottom: 12px;
+}
+
+.summaryTotalAccent {
+  color: var(--color-accent);
+}

@@ -1,0 +1,270 @@
+.eyebrowRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+.eyebrowDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.locationsWrap {
+  margin-top: 16px;
+}
+
+.locationsLabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.locationsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.locationChip {
+  padding: 4px 12px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.showAllWrap {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.emptyToursCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+}
+
+.emptyToursText {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+.spotlightActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.mapCtaPill {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(0, 103, 177, 0.08);
+  border: 1px solid rgba(0, 103, 177, 0.28);
+  text-decoration: none;
+}
+
+.mapCtaPill:hover {
+  background: rgba(0, 103, 177, 0.14);
+}
+
+.sectionHeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.18;
+  font-weight: 700;
+  color: var(--color-neutral);
+  margin: 4px 0 8px;
+}
+
+.sectionSubhead {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 720px;
+}
+
+.sitesSection {
+  margin-bottom: 52px;
+}
+
+.siteToursStack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.siteTourCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 26px;
+  box-shadow: var(--shadow-sm);
+}
+
+.siteTourTop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px 24px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.siteTourIntro {
+  flex: 1 1 360px;
+}
+
+.siteTourBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.siteTourMatchPill {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 4px 11px;
+}
+
+.siteTourTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(22px, 2.4vw, 28px);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--color-neutral);
+  margin: 0 0 8px;
+}
+
+.siteTourTitleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.siteTourTitleLink:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.siteTourSummary {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+
+.siteTourMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.siteTourSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.siteTourPriceWrap {
+  text-align: right;
+}
+
+.siteTourPriceLabel {
+  display: block;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.siteTourPriceVal {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-neutral);
+  line-height: 1.1;
+}
+
+.siteTourActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dayMatchedCard {
+  border-color: var(--color-accent);
+}
+
+.dayMatchTag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.siblingSitesSection {
+  margin-top: 52px;
+  padding-top: 36px;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .siteTourCard {
+    padding: 18px;
+  }
+  .siteTourSide {
+    align-items: flex-start;
+  }
+  .siteTourPriceWrap {
+    text-align: left;
+  }
+}

@@ -1,0 +1,368 @@
+.metaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.metaStarIcon {
+  color: var(--color-accent);
+  flex: none;
+}
+
+.metaRatingNum {
+  font-weight: 700;
+  color: var(--color-neutral);
+}
+
+.metaReviewCount {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.metaShieldIcon {
+  color: var(--color-text-secondary);
+  flex: none;
+}
+
+.jumpItineraryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-neutral);
+  text-decoration: none;
+  padding: 6px 2px;
+  transition: color 0.15s ease;
+}
+
+.jumpItineraryLink:hover {
+  color: var(--color-accent);
+}
+
+.specTextWrap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.specSub {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.gradeMeter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.gradeBar {
+  width: 18px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+}
+
+.gradeBarActive {
+  background: var(--color-accent);
+}
+
+.alertIcon {
+  font-size: 24px;
+  line-height: 1;
+  flex: none;
+}
+
+.alertTitle {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-neutral);
+}
+
+.alertText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.highlightCheck {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.sectionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mapIntro {
+  color: var(--color-muted);
+  font-size: 15px;
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+
+.mapPills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.mapPillBtn {
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 999px;
+}
+
+.mapFsLink {
+  font-size: 13px;
+  padding: 8px 16px;
+  gap: 6px;
+}
+
+.mapIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.itineraryHint {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.reviewsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.reviewCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reviewStars {
+  color: var(--color-neutral);
+  font-size: 16px;
+}
+
+.reviewQuote {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.4;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.reviewAuthor {
+  margin-top: auto;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.priceCaption {
+  font-size: 13px;
+  color: var(--color-muted);
+  display: block;
+}
+
+.priceMain {
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--color-neutral);
+  font-family: var(--font-serif);
+  line-height: 1.1;
+  display: block;
+}
+
+.priceInclusions {
+  font-size: 13px;
+  color: var(--color-accent);
+  font-weight: 600;
+  display: block;
+  margin-top: 4px;
+}
+
+.scheduleBox {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--color-base);
+}
+
+.scheduleLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-muted);
+  display: block;
+}
+
+.scheduleValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-neutral);
+}
+
+.sidebarBtnFull {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.sidebarBtnPrimary {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+  font-size: 16px;
+  padding: 14px 20px;
+}
+
+.sidebarBtnOutline {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.mapSection {
+  margin-bottom: 24px;
+}
+
+.scheduleIcon {
+  font-size: 20px;
+}
+
+.perksList {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.perksItem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.perkTick {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.helpEyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-footer-muted);
+}
+
+.helpDeskRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.helpAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-footer-surface);
+  border: 1px solid var(--color-footer-border);
+  color: var(--color-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.helpDeskName {
+  font-size: 16px;
+  font-weight: 700;
+  display: block;
+  color: var(--color-footer-text);
+}
+
+.helpDeskSub {
+  font-size: 13px;
+  color: var(--color-footer-muted);
+}
+
+.helpLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.helpWaLink {
+  color: var(--color-footer-text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.helpEmailLink {
+  color: var(--color-footer-text);
+  text-decoration: underline;
+}
+
+.toursIntro {
+  margin-bottom: 32px;
+  max-width: 720px;
+}
+
+.toursHeading {
+  font-family: var(--font-serif);
+  font-size: 38px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 6px 0 14px;
+}
+
+.toursSubhead {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.specLink {
+  color: var(--color-neutral);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+
+.specLink:hover {
+  color: var(--color-accent);
+}

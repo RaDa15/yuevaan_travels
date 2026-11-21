@@ -1,0 +1,308 @@
+.guideCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 44px;
+  margin-bottom: 56px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sectionHeading {
+  font-family: var(--font-serif);
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.sectionIntro {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 780px;
+  margin-bottom: 32px;
+}
+
+.sdfGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.sdfBox {
+  background: var(--color-base);
+  border: 1.5px solid var(--color-border);
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.sdfEyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.sdfFigure {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin: 10px 0;
+}
+
+.sdfUnit {
+  font-size: 15px;
+  font-family: var(--font-sans);
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.sdfDesc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+.sdfValidityNote {
+  font-size: 13.5px;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.guidesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+  margin-bottom: 64px;
+}
+
+.infoCard {
+  padding: 32px;
+}
+
+.infoCardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 103, 177, 0.1);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.infoCardTitle {
+  margin-bottom: 10px;
+}
+
+.faqsSection {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 44px;
+  box-shadow: var(--shadow-sm);
+}
+
+.faqsHeader {
+  margin-bottom: 32px;
+}
+
+.faqsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faqItem {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.faqItem:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.faqQuestion {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.faqAnswer {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.aboutStoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 48px;
+  align-items: center;
+  margin-bottom: 72px;
+}
+
+.aboutLeadHeading {
+  font-family: var(--font-serif);
+  font-size: 38px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 8px 0 18px;
+}
+
+.aboutPara {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+.aboutChipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.aboutChip {
+  padding: 14px 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.aboutChipNum {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-family: var(--font-serif);
+}
+
+.aboutChipTxt {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.aboutImgWrap {
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.aboutImg {
+  width: 100%;
+  height: 440px;
+  object-fit: cover;
+  display: block;
+}
+
+.pillarsSection {
+  margin-bottom: 72px;
+}
+
+.pillarsHead {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 44px;
+}
+
+.pillarEmoji {
+  font-size: 32px;
+  margin-bottom: 14px;
+}
+
+.aboutCertSection {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 44px 0 36px;
+  text-align: center;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+
+.aboutCertHead {
+  max-width: 700px;
+  margin: 0 auto 20px;
+  padding: 0 20px;
+}
+
+.aboutCertTitle {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 6px 0 10px;
+}
+
+.aboutCertSub {
+  font-size: 15px;
+  color: var(--color-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.legalContainer {
+  max-width: 880px;
+}
+
+.legalCard {
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.legalHeading {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.legalPara {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.legalPara:last-child {
+  margin-bottom: 0;
+}
+
+.legalList {
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legalActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.legalBtn {
+  padding: 12px 26px;
+}
+
+.emailInline {
+  color: var(--color-neutral);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 3px;
+}

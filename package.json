@@ -1,0 +1,26 @@
+{
+  "name": "yuevaan-travels",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Yuevaan Bhutan Travels - Next.js 16 + React 19 Static Website & Inquiry Server",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "check:data": "node scripts/check-data.mjs",
+    "prebuild": "npm run check:data",
+    "build": "next build",
+    "start": "node server.js",
+    "lint": "eslint .",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "next": "^16.4.6",
+    "pg": "^8.23.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.4.6"
+  }
+}
