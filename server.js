@@ -1975,13 +1975,16 @@ export function createAdminPortalServer(options = {}) {
 
 if (process.argv[1] === __filename) {
   (async () => {
+    const isDev = process.argv.includes('--dev') || process.env.NEXT_DEV === '1';
     await dataStore.init();
-    const { handler: nextHandler } = await prepareNextApp({ dev: false });
+    const { handler: nextHandler } = await prepareNextApp({ dev: isDev });
     const server = createAppServer({ nextHandler });
     server.listen(PORT, async () => {
       const emailCfg = getEmailConfig();
       const configured = await dataStore.isConfiguredAsync();
-      console.log(`Public Website:  http://localhost:${PORT} (Dynamic Next.js SSR)`);
+      console.log(
+        `Public Website:  http://localhost:${PORT} (${isDev ? 'Next.js Dev Mode' : 'Dynamic Next.js SSR'})`
+      );
       if (ADMIN_PORT && ADMIN_PORT !== PORT) {
         const adminServer = createAdminPortalServer({ nextHandler });
         adminServer.listen(ADMIN_PORT, () => {

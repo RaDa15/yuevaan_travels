@@ -8,7 +8,8 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js --dev",
+    "dev:next": "next dev",
     "check:data": "node scripts/check-data.mjs",
     "prebuild": "npm run check:data",
     "build": "next build",

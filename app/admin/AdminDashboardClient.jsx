@@ -45,7 +45,7 @@ function getCandidateApiBases() {
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
   if (!isLocal) return [''];
   if (port === '3000' || port === '3001' || port === '3002') {
-    return [`http://${hostname}:8081`, `http://${hostname}:8080`];
+    return [`http://${hostname}:8082`, `http://${hostname}:8081`, `http://${hostname}:8080`];
   }
   return ['', `http://${hostname}:8081`, `http://${hostname}:8080`].filter(
     (b, idx, arr) => b === '' || (b !== window.location.origin && arr.indexOf(b) === idx)
@@ -276,16 +276,25 @@ export default function AdminDashboardClient({ portalRole = null }) {
     }
 
     const candidates = getCandidateApiBases();
+    const isLocalHost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const maxAttempts = isLocalHost ? 1 : 3;
     let matched = null;
-    for (const candidate of candidates) {
-      try {
-        const res = await adminFetch('/api/admin/session', {}, candidate);
-        if (res.ok && res.data?.ok) {
-          apiBaseRef.current = candidate;
-          matched = res.data;
-          break;
-        }
-      } catch {}
+    for (let attempt = 0; attempt < maxAttempts && !matched; attempt++) {
+      for (const candidate of candidates) {
+        try {
+          const res = await adminFetch('/api/admin/session', {}, candidate);
+          if (res.ok && res.data?.ok) {
+            apiBaseRef.current = candidate;
+            matched = res.data;
+            break;
+          }
+        } catch {}
+      }
+      if (!matched && attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
 
     setLocalFallbackItems(readLocalFallback());
@@ -807,17 +816,32 @@ export default function AdminDashboardClient({ portalRole = null }) {
   }
 
   if (serverUnreachable) {
+    const isLocalHost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     return renderAuthShell(
       <div className={styles.loginWrap}>
         <div className={styles.loginBrand}>
           <img src="/logos/yuevaan-logo.png" alt="Yuevaan Bhutan Travels" width={40} height={40} />
           <strong>{siteConfig.name}</strong>
         </div>
-        <h1 className={styles.loginTitle}>Start the Booking Server</h1>
+        <h1 className={styles.loginTitle}>
+          {isLocalHost ? 'Start the Booking Server' : 'Server Is Waking Up'}
+        </h1>
         <p className={styles.loginSub}>
-          The Admin Portal connects to <span className={styles.codeInline}>server.js</span> to read saved bookings
-          and send automatic emails. Run <span className={styles.codeInline}>npm start</span> in your project folder,
-          then open <span className={styles.codeInline}>http://localhost:8082</span> or click retry below.
+          {isLocalHost ? (
+            <>
+              The Admin Portal connects to <span className={styles.codeInline}>server.js</span> to read saved bookings
+              and send automatic emails. Run <span className={styles.codeInline}>npm run dev</span> or{' '}
+              <span className={styles.codeInline}>npm start</span> in your project folder, then open{' '}
+              <span className={styles.codeInline}>http://localhost:8082</span> or click retry below.
+            </>
+          ) : (
+            <>
+              Could not reach the live booking server yet (free cloud instances may take 20–40 seconds to wake up after
+              idle sleep). Please click retry below.
+            </>
+          )}
         </p>
         <button type="button" onClick={checkSession} className={`btn btn-primary ${styles.loginSubmit}`}>
           Retry Connection
