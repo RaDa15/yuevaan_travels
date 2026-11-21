@@ -39,6 +39,7 @@ jobs:
       - name: Build static export for GitHub Pages
         env:
           NEXT_PUBLIC_BASE_PATH: /yuevaan_travels
+          NEXT_PUBLIC_PORTAL_ORIGIN: https://yuevaan-bhutan-travels.onrender.com
         run: node scripts/build-gh-pages.mjs
 
       - name: Upload Pages artifact

@@ -15,6 +15,30 @@ import UsersRolesView from './components/UsersRolesView';
 import { AuditLogView, SettingsView } from './components/AuditSettingsView';
 import styles from './Admin.module.css';
 
+const REMOTE_PORTAL_ORIGIN = (process.env.NEXT_PUBLIC_PORTAL_ORIGIN || '').replace(/\/+$/, '');
+const STATIC_BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/+$/, '');
+const ALLOWED_PORTAL_PATHS = new Set([
+  '/admin',
+  '/owner',
+  '/manager',
+  '/reservation',
+  '/reservations',
+  '/finance',
+]);
+
+function getRemotePortalRedirectUrl() {
+  if (typeof window === 'undefined' || !REMOTE_PORTAL_ORIGIN) return null;
+  if (!REMOTE_PORTAL_ORIGIN.startsWith('https://')) return null;
+  if (window.location.origin === REMOTE_PORTAL_ORIGIN) return null;
+  let routePath = window.location.pathname || '/admin';
+  if (STATIC_BASE_PATH && routePath.startsWith(STATIC_BASE_PATH)) {
+    routePath = routePath.slice(STATIC_BASE_PATH.length) || '/admin';
+  }
+  routePath = routePath.replace(/\/+$/, '') || '/admin';
+  const safePath = ALLOWED_PORTAL_PATHS.has(routePath) ? routePath : '/admin';
+  return `${REMOTE_PORTAL_ORIGIN}${safePath}`;
+}
+
 function getCandidateApiBases() {
   if (typeof window === 'undefined') return [''];
   const { hostname, port } = window.location;
@@ -245,6 +269,12 @@ export default function AdminDashboardClient({ portalRole = null }) {
   );
 
   const performSessionCheck = useCallback(async () => {
+    const redirectUrl = getRemotePortalRedirectUrl();
+    if (redirectUrl) {
+      window.location.replace(redirectUrl);
+      return;
+    }
+
     const candidates = getCandidateApiBases();
     let matched = null;
     for (const candidate of candidates) {
