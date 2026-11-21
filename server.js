@@ -710,7 +710,8 @@ async function handleAdminRoute(req, res, urlPath) {
         summary: 'Signed out of Admin Portal',
       });
     }
-    const cookie = `${ADMIN_COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`;
+    const isHttps = req.headers['x-forwarded-proto'] === 'https';
+    const cookie = `${ADMIN_COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0${isHttps ? '; Secure' : ''}`;
     sendJson(res, 200, { ok: true, authenticated: false }, { ...adminHeaders, 'Set-Cookie': cookie });
     return;
   }

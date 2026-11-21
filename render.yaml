@@ -1,0 +1,41 @@
+databases:
+  - name: yuevaan-travels-db
+    plan: free
+    databaseName: yuevaan_travels
+    user: yuevaan
+
+services:
+  - type: web
+    name: yuevaan-bhutan-travels
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/public/settings
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22.14.0"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: yuevaan-travels-db
+          property: connectionString
+      - key: DATABASE_SSL
+        value: "true"
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SEND_GUEST_CONFIRMATION
+        value: "1"
+      - key: NEXT_PUBLIC_FILM_URL
+        sync: false
