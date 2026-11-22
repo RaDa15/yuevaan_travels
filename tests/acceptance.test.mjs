@@ -229,11 +229,18 @@ test('Dynamic SSR HTML, SEO, Accessibility, Faststart MP4s, 48 Legacy 301s & Web
     assert.ok(homeHtml.includes('/videos/Bhutan-Home-Film%20No-Text%204K.mp4'));
 
     // Faststart MP4 layout check
-    for (const videoName of [
+    const requiredFaststartVideos = [
+      'bhutan-home-film-web.mp4',
+      'discover-bhutan-film-web.mp4',
+    ];
+    const optionalLocalMasters = [
       'Bhutan-Home-Film No-Text 4K.mp4',
       'Discover-Bhutan Full-Film 1080P District-Map.mp4',
-    ]) {
-      const fd = fs.openSync(path.join(publicDir, 'videos', videoName), 'r');
+    ];
+    for (const videoName of [...requiredFaststartVideos, ...optionalLocalMasters]) {
+      const videoPath = path.join(publicDir, 'videos', videoName);
+      if (optionalLocalMasters.includes(videoName) && !fs.existsSync(videoPath)) continue;
+      const fd = fs.openSync(videoPath, 'r');
       const st = fs.fstatSync(fd);
       let off = 0;
       let moovOff = -1;

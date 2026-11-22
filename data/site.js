@@ -121,6 +121,7 @@ export const site = {
 
   media: {
     heroVideos: [
+      '/videos/bhutan-home-film-web.mp4',
       '/videos/Bhutan-Home-Film%20No-Text%204K.mp4',
       '/videos/flight-preloader.mp4',
       '/videos/paro-valley-loop.mp4',
@@ -128,7 +129,7 @@ export const site = {
     heroPoster: '/images/flight-himalayas.jpg',
     filmUrl:
       process.env.NEXT_PUBLIC_FILM_URL ||
-      '/videos/Discover-Bhutan%20Full-Film%201080P%20District-Map.mp4',
+      '/videos/discover-bhutan-film-web.mp4',
     filmPoster: '/images/tigers-nest.jpg',
   },
 
